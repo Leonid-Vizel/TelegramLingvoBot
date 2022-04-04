@@ -1,10 +1,18 @@
-﻿
+﻿using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using TelegramLingvoBot;
 
+#region BaseLoading
+DataBaseInteractions dbInteract = new DataBaseInteractions("");
+List<TelegramLingvoBot.User> Users = dbInteract.GetAllUsers();
+List<TelegramLingvoBot.Teacher> Teachers = dbInteract.GetAllTeachers();
+#endregion
+
+#region Starting the bot
 string token = string.Empty;
 if (System.IO.File.Exists("BotCode.token"))
 {
@@ -46,26 +54,81 @@ Console.ReadLine();
 
 // Send cancellation request to stop bot
 cts.Cancel();
+#endregion
 
 async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
 {
-    // Only process Message updates: https://core.telegram.org/bots/api#message
-    if (update.Type != UpdateType.Message)
+    if (update.Type != UpdateType.Message || update.Message!.Type != MessageType.Text || update.Message.Text == null)
+    {
         return;
-    // Only process text messages
-    if (update.Message!.Type != MessageType.Text)
+    }    
+    long chatId = update.Message.Chat.Id;
+    string? messageText = update.Message.Text;
+    TelegramLingvoBot.User? user = Users.FirstOrDefault(x => x.Id == chatId);
+    if (user == null)
+    {
+        if (update.Message.Text.Equals("Регистрация"))
+        {
+            user = new TelegramLingvoBot.User(chatId);
+            dbInteract.AddUser(user);
+            await botClient.SendTextMessageAsync(chatId: chatId, text: "Спасибо за регистрацию! У Вас Есть 1 пробный вопрос.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.Register);
+        }
+        else
+        {
+            await botClient.SendTextMessageAsync(chatId: chatId, text: "Привет! Зарегайся пж)", cancellationToken: cancellationToken, replyMarkup: ButtonBank.Register);
+        }
         return;
+    }
 
-    var chatId = update.Message.Chat.Id;
-    var messageText = update.Message.Text;
+    switch(user.Position)
+    {
+        case DialogPosition.MainMenu:
+            switch (update.Message.Text)
+            {
+                case "Магазин":
+                    await botClient.SendTextMessageAsync(chatId: chatId, text: $"Добро пожаловать в магазин!Доступно {dbInteract.GetUserAvailibleQuestionsAmount(chatId)} вопросов.Выберите кол - во вопросов которое хотите купить:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenu);
+                    user.SetPosition(dbInteract, DialogPosition.ShopAmount);
+                    break;
+                case "Работы":
+                    StringBuilder worksBuilder = new StringBuilder("Список ваших работ:\n");
+                    foreach (Work work in dbInteract.GetWorksOfUser(chatId))
+                    {
+                        worksBuilder.AppendLine($"{work.Id}) {work.QuestionId}");
+                    }
+                    await botClient.SendTextMessageAsync(chatId: chatId, text: worksBuilder.ToString(), cancellationToken: cancellationToken, replyMarkup: null);
+                    user.SetPosition(dbInteract, DialogPosition.ChooseWorkId);
+                    break;
+                case "Профиль":
 
-    Console.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
+                    user.SetPosition(dbInteract, DialogPosition.ProfileShown);
+                    break;
+                default:
+                    await botClient.SendTextMessageAsync(chatId: chatId, text: "Не могу вас понять :(", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenu);
+                    break;
+            }
+            break;
+        case DialogPosition.ChooseWorkId:
+            break;
+        case DialogPosition.WorkShown:
+            break;
+        case DialogPosition.ShopAmount:
+            break;
+        case DialogPosition.ShopConfirmation:
+            break;
+        case DialogPosition.ShopWaitingForPayment:
+            break;
+        case DialogPosition.ProfileShown:
+            break;
+        case DialogPosition.TeacherMainMenu:
+            break;
+        case DialogPosition.TeacherWorkCheckComment:
+            break;
+        case DialogPosition.TeacherWorkCheckRate:
+            break;
+        case DialogPosition.WaitingForResponce:
+            break;
 
-    // Echo received message text
-    Message sentMessage = await botClient.SendTextMessageAsync(
-        chatId: chatId,
-        text: "You said:\n" + messageText,
-        cancellationToken: cancellationToken);
+    }
 }
 
 Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
