@@ -98,5 +98,25 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+
+        internal static IReplyMarkup ShopButtons
+        {
+            get
+            {
+                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
+                    new List<List<KeyboardButton>>
+                    {
+                        new List<KeyboardButton>
+                        {
+                            new KeyboardButton("10"),
+                            new KeyboardButton("50"),
+                            new KeyboardButton("100"),
+                            new KeyboardButton("Назад")
+                        }
+                    });
+                keyboard.ResizeKeyboard = true;
+                return keyboard;
+            }
+        }
     }
 }

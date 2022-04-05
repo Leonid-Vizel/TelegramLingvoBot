@@ -27,7 +27,7 @@ namespace TelegramLingvoBot
             dbInteract.UpdateUser(this);
         }
 
-        public void DecrementQuestions(DataBaseInteractions dbInteract, bool ready)
+        public void SetReady(DataBaseInteractions dbInteract, bool ready)
         {
             QuestionReady = ready;
             dbInteract.UpdateUser(this);
@@ -43,10 +43,17 @@ namespace TelegramLingvoBot
     internal class Teacher
     {
         public long Id { get; private set; }
-        public float Balance { get; private set; }
+        public decimal Balance { get; private set; }
         public DialogPosition Position { get; private set; }
 
-        public void AddBalance(DataBaseInteractions dbInteract, float money)
+        public Teacher(long id, decimal balance, DialogPosition position)
+        {
+            Id = id;
+            Balance = balance;
+            Position = position;
+        }
+
+        public void AddBalance(DataBaseInteractions dbInteract, decimal money)
         {
             Balance += money;
             dbInteract.UpdateTeacher(this);

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TelegramLingvoBot
 {
-    internal class Work
+    internal class Answer
     {
         public long Id { get; private set; }
         public long UserId { get; private set; }
@@ -16,7 +16,7 @@ namespace TelegramLingvoBot
         public string? Comment { get; private set; }
         public long? TeacherId { get; private set; }
 
-        public Work(long id, long userId, Question question, string text, int? rate, string? comment, long? teacherId)
+        public Answer(long id, long userId, Question question, string text, int? rate, string? comment, long? teacherId)
         {
             Id = id;
             UserId = userId;

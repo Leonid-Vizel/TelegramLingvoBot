@@ -10,13 +10,20 @@ namespace TelegramLingvoBot
     {
         public int Id { get; private set; }
         public Theme Theme { get; private set; }
+        public QuestionType Type { get; private set; }
         public string Text { get; private set; }
 
-        public Question(int id, Theme theme, string text)
+        public Question(int id, Theme theme, QuestionType Type, string text)
         {
             Id = id;
             Theme = theme;
             Text = text;
         }
+    }
+
+    enum QuestionType
+    {
+        GeneralQuestion,
+        Translation
     }
 }
