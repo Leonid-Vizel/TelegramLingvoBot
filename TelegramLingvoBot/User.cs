@@ -51,6 +51,7 @@ namespace TelegramLingvoBot
         public long Id { get; private set; }
         public decimal Balance { get; private set; }
         public DialogPosition Position { get; private set; }
+        public Answer? CurrentAnswer { get; set; }
 
         public Teacher(long id, decimal balance, DialogPosition position)
         {

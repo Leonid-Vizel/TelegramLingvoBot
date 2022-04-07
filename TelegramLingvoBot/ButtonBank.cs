@@ -165,5 +165,30 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+        internal static IReplyMarkup RateForAnswerButtons
+        {
+            get
+            {
+                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
+                    new List<List<KeyboardButton>>
+                    {
+                        new List<KeyboardButton>
+                        {
+                            new KeyboardButton("1"),
+                            new KeyboardButton("2"),
+                            new KeyboardButton("3"),
+                            new KeyboardButton("4"),
+                            new KeyboardButton("5"),
+                            new KeyboardButton("6"),
+                            new KeyboardButton("7"),
+                            new KeyboardButton("8"),
+                            new KeyboardButton("9"),
+                            new KeyboardButton("10"),
+                        }
+                    });
+                keyboard.ResizeKeyboard = true;
+                return keyboard;
+            }
+        }
     }
 }

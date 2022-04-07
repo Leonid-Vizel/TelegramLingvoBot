@@ -270,19 +270,34 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             }
             break;
         case DialogPosition.TeacherMainMenu:
-            IReplyMarkup teacherMainMenuButtonButtons = ButtonBank.TeacherMainMenuButtonsWithWithdrawalOfFunds;
-            List<>
+            IReplyMarkup teacherMainMenuButtons = ButtonBank.TeacherMainMenuButtonsWithWithdrawalOfFunds;
+            long countOfVerifiedAnswersOfTeacher = dbInteract.GetCountOfVerifiedAnswersOfTeacher(teacher.Id);
             if (teacher.Balance < 100)
             {
-                teacherMainMenuButtonButtons = ButtonBank.TeacherMainMenuButtonsWithoutWithdrawalOfFunds;
+                teacherMainMenuButtons = ButtonBank.TeacherMainMenuButtonsWithoutWithdrawalOfFunds;
             }
             switch (update.Message.Text)
             {
                 case "Профиль":
                     StringBuilder TeacherProfileText = new StringBuilder();
                     TeacherProfileText.AppendLine($"Ваш Id в системе: {teacher.Id}");
-                    TeacherProfileText.AppendLine($"Количество проверенных работ: {teacher.}");
+                    TeacherProfileText.AppendLine($"Количество проверенных работ: {countOfVerifiedAnswersOfTeacher}");
+                    TeacherProfileText.AppendLine($"Баланс: {teacher.Balance}");
                     await botClient.SendTextMessageAsync(chatId: chatId, text: TeacherProfileText.ToString(), cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
+                    break;
+                case "Проверить":
+                    Answer answer = dbInteract.GetFirstAnswer();
+                    if (answer == null && teacher.CurrentAnswer == null)
+                    {
+                        await botClient.SendTextMessageAsync(chatId: chatId, text: "Работ на проверку пока нет", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
+                    }
+                    else
+                    {
+                        teacher.CurrentAnswer = answer;
+                        answer.TeacherId = teacher.Id;
+                        await botClient.SendTextMessageAsync(chatId: chatId, text: "Есть работа на проверку!\nВопрос: [Question]\nТекст: [Text]\nВведите комментарий: ", cancellationToken: cancellationToken);
+                        teacher.SetPosition(dbInteract, DialogPosition.TeacherWorkCheckComment);
+                    }
                     break;
                 default:
                     await botClient.SendTextMessageAsync(chatId: chatId, text: "Извините, я Вас не понял 🤖🤖🤖", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
@@ -290,8 +305,41 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             }
             break;
         case DialogPosition.TeacherWorkCheckComment:
+            if (update.Message.Text != "")
+            {
+                teacher.CurrentAnswer.Comment = update.Message.Text;
+                await botClient.SendTextMessageAsync(chatId: chatId, text: "Укажите оценку от 1 до 10:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.RateForAnswerButtons);
+                teacher.SetPosition(dbInteract, DialogPosition.TeacherWorkCheckRate);
+            }
             break;
         case DialogPosition.TeacherWorkCheckRate:
+            teacherMainMenuButtons = ButtonBank.TeacherMainMenuButtonsWithWithdrawalOfFunds;
+            countOfVerifiedAnswersOfTeacher = dbInteract.GetCountOfVerifiedAnswersOfTeacher(teacher.Id);
+            if (teacher.Balance < 100)
+            {
+                teacherMainMenuButtons = ButtonBank.TeacherMainMenuButtonsWithoutWithdrawalOfFunds;
+            }
+            if (teacher.CurrentAnswer.Comment != "" && teacher.CurrentAnswer.Rate != null && teacher.CurrentAnswer.Comment != null)
+            {
+                teacher.AddBalance(dbInteract, 25);
+                teacher.CurrentAnswer = null;
+                await botClient.SendTextMessageAsync(chatId: chatId, text: "Отлично! Ваша проверка отправлена! На Ваш баланс добавлено: 25 рублей", cancellationToken: cancellationToken, replyMarkup: teacherMainMenuButtons);
+                teacher.SetPosition(dbInteract, DialogPosition.TeacherMainMenu);
+                break;
+            }
+            else if (teacher.CurrentAnswer.Rate == null && teacher.CurrentAnswer.Comment != "" && teacher.CurrentAnswer.Comment != null)
+            {
+                int rate = 0;
+                if (int.TryParse(update.Message.Text, out rate))
+                {
+                    if (0 < rate && rate <= 10)
+                    {
+                        teacher.CurrentAnswer.Rate = rate;
+                    }
+                }
+                break;
+            }
+            await botClient.SendTextMessageAsync(chatId: chatId, text: "Укажите оценку от 1 до 10:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.RateForAnswerButtons);
             break;
         case DialogPosition.WaitingForResponce:
             break;
