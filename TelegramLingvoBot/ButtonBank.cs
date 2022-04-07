@@ -94,6 +94,22 @@ namespace TelegramLingvoBot
             }
         }
 
+        internal static InlineKeyboardMarkup JustBackButtonInline
+        {
+            get
+            {
+                InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup(
+                    new List<List<InlineKeyboardButton>>
+                    {
+                        new List<InlineKeyboardButton>
+                        {
+                            new InlineKeyboardButton("Назад")
+                        }
+                    });
+                return keyboard;
+            }
+        }
+
         internal static IReplyMarkup ShopButtons
         {
             get

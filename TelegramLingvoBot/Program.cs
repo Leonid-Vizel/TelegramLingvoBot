@@ -4,6 +4,7 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.Payments;
 using TelegramLingvoBot;
 
 #region BaseLoading
@@ -60,6 +61,23 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
 {
     if (update.Type != UpdateType.Message || update.Message!.Type != MessageType.Text || update.Message.Text == null)
     {
+        if (update.Type == UpdateType.PreCheckoutQuery)
+        {
+            string[] decodeArray = update.PreCheckoutQuery.InvoicePayload.Split('-');
+            long userId = long.Parse(decodeArray[0]);
+            byte amount = byte.Parse(decodeArray[1]);
+            TelegramLingvoBot.User? payUser = Users.FirstOrDefault(x => x.Id == userId);
+            if (payUser != null)
+            {
+                payUser.AddQuestions(dbInteract, amount);
+                await botClient.SendTextMessageAsync(chatId: userId, text: $"Спасибо за покупку! На ваш акканут добавлено {amount} вопросов!", cancellationToken: cancellationToken);
+                await botClient.AnswerPreCheckoutQueryAsync(update.PreCheckoutQuery.Id);
+            }
+        }
+        else
+        {
+            Console.WriteLine(update.Type);
+        }
         return;
     }
     long chatId = update.Message.Chat.Id;
@@ -81,7 +99,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
         return;
     }
 
-    await botClient.SendTextMessageAsync(chatId: chatId, text: $"{user.Position}", cancellationToken: cancellationToken);
+    await botClient.SendTextMessageAsync(chatId: chatId, text: user.Position.ToString() , cancellationToken: cancellationToken);
 
     switch (user.Position)
     {
@@ -209,13 +227,20 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             }
             break;
         case DialogPosition.ShopAmount:
+            List<LabeledPrice> myList = new List<LabeledPrice>();
             switch (update.Message.Text)
             {
                 case "10":
+                    myList.Add(new LabeledPrice("Цена", 50000));
+                    await botClient.SendInvoiceAsync(chatId: chatId, title: "Покупка вопросов", description: "10 вопросов", payload: $"{chatId}-10", providerToken: "381764678:TEST:35685", currency: "RUB", myList);
                     break;
                 case "50":
+                    myList.Add(new LabeledPrice("Цена", 230000));
+                    await botClient.SendInvoiceAsync(chatId: chatId, title: "Покупка вопросов", description: "50 вопросов", payload: $"{chatId}-50", providerToken: "381764678:TEST:35685", currency: "RUB", myList);
                     break;
                 case "100":
+                    myList.Add(new LabeledPrice("Цена", 450000));
+                    await botClient.SendInvoiceAsync(chatId: chatId, title: "Покупка вопросов", description: "100 вопросов", payload: $"{chatId}-100", providerToken: "381764678:TEST:35685", currency: "RUB", myList);
                     break;
                 case "Назад":
                     await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
@@ -225,10 +250,6 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
                     await botClient.SendTextMessageAsync(chatId: chatId, text: "Извините, я Вас не понял 🤖🤖🤖\nВыберите кол - во вопросов которое хотите купить:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ShopButtons);
                     break;
             }
-            break;
-        case DialogPosition.ShopConfirmation:
-            break;
-        case DialogPosition.ShopWaitingForPayment:
             break;
         case DialogPosition.ProfileShown:
             switch (update.Message.Text)

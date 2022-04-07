@@ -21,11 +21,17 @@ namespace TelegramLingvoBot
             QuestionReady = questionReady;
         }
 
-        public void DecrementQuestions(DataBaseInteractions dbInteract)
+        public void DecrementQuestion(DataBaseInteractions dbInteract)
         {
             QuestionAmount--;
             dbInteract.UpdateUser(this);
         }
+        public void AddQuestions(DataBaseInteractions dbInteract, byte amount)
+        {
+            QuestionAmount += amount;
+            dbInteract.UpdateUser(this);
+        }
+
 
         public void SetReady(DataBaseInteractions dbInteract, bool ready)
         {
@@ -72,8 +78,6 @@ namespace TelegramLingvoBot
         ChooseWorkId,
         WorkShown,
         ShopAmount,
-        ShopConfirmation,
-        ShopWaitingForPayment,
         ProfileShown,
         TeacherMainMenu,
         TeacherWorkCheckComment,

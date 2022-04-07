@@ -46,8 +46,8 @@ namespace TelegramLingvoBot
                             {
                                 users.Add(new User(
                                         reader.GetInt64(0),
-                                        (DialogPosition)reader.GetInt32(1),
-                                        reader.GetInt32(2), true));
+                                        (DialogPosition)reader.GetInt32(2),
+                                        reader.GetInt32(1), true));
                             }
                         }
                     }
