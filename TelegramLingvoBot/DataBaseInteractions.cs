@@ -132,7 +132,22 @@ namespace TelegramLingvoBot
             }
             return total - used;
         }
-
+        public long GetCountOfVerifiedAnswersOfTeacher(long teacherId)
+        {
+            long countOfVerifiedAnswers = 0;
+            object result;
+            using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+            {
+                connection.Open();
+                using(MySqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT COUNT(*) FROM answers WHERE TeacherId={teacherId}";
+                    result = command.ExecuteScalar();
+                    countOfVerifiedAnswers = result == DBNull.Value ? 0 : (long)result;
+                }
+            }
+            return countOfVerifiedAnswers;
+        }
         public List<Answer> GetAnswersOfUser(long userId)
         {
             List<Answer> answers = new List<Answer>();
@@ -231,7 +246,69 @@ namespace TelegramLingvoBot
                 }
             }
         }
+        public Answer? GetFirstAnswer()
+        {
+            Answer? answer = null;
+            using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+            {
+                connection.Open();
+                using (MySqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT * FROM answers WHERE Rate=Null";
+                    using (MySqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            object idRead = reader.GetValue(0);
+                            object userIdRead = reader.GetValue(1);
+                            object QuestionIdRead = reader.GetValue(2);
+                            object textOfUserRead = reader.GetValue(3);
+                            long id = (long)idRead;
+                            long userId = (long)userIdRead;
+                            long QuestionId = (long)QuestionIdRead;
+                            string textOfUser = (string)textOfUserRead;
+                            answer = new Answer(id, userId, null, textOfUser, null, null, null);
 
+                        }
+                    }
+                }
+                using (MySqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT ThemeId,Text FROM questions WHERE id = {answer.Question.Id};";
+                    using (MySqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            answer.Question.Theme = new Theme(reader.GetInt32(0));
+                            answer.Question.Text = reader.GetTextReader(1).ReadToEnd();
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                }
+                using (MySqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT Text FROM themes WHERE id = {answer.Question.Theme.Id};";
+                    using (MySqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            answer.Question.Theme.Name = reader.GetTextReader(0).ReadToEnd();
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                }
+            }
+            return answer;
+        }
         public Answer? GetAnswer(long answerId)
         {
             Answer? answer = null;

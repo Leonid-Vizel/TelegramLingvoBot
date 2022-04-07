@@ -41,25 +41,6 @@ namespace TelegramLingvoBot
             }
         }
 
-        internal static IReplyMarkup TeacherMainMenuButtons
-        {
-            get
-            {
-                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
-                    new List<List<KeyboardButton>>
-                    {
-                        new List<KeyboardButton>
-                        {
-                            new KeyboardButton("Проверить"),
-                            new KeyboardButton("Профиль"),
-                            new KeyboardButton("Вывод средств")
-                        }
-                    });
-                keyboard.ResizeKeyboard = true;
-                return keyboard;
-            }
-        }
-
         internal static IReplyMarkup YesNoButtons
         {
             get
@@ -151,6 +132,68 @@ namespace TelegramLingvoBot
             }
         }
 
+        internal static IReplyMarkup TeacherMainMenuButtonsWithoutWithdrawalOfFunds
+        {
+            get
+            {
+                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
+                    new List<List<KeyboardButton>>
+                    {
+                        new List<KeyboardButton>
+                        {
+                            new KeyboardButton("Профиль"),
+                            new KeyboardButton("Проверить"),
+                        }
+                    });
+                keyboard.ResizeKeyboard = true;
+                return keyboard;
+            }
+        }
+
+        internal static IReplyMarkup TeacherMainMenuButtonsWithWithdrawalOfFunds
+        {
+            get
+            {
+                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
+                    new List<List<KeyboardButton>>
+                    {
+                        new List<KeyboardButton>
+                        {
+                            new KeyboardButton("Профиль"),
+                            new KeyboardButton("Проверить"),
+                            new KeyboardButton("Вывод средств"),
+                        }
+                    });
+                keyboard.ResizeKeyboard = true;
+                return keyboard;
+            }
+        }
+        internal static IReplyMarkup RateForAnswerButtons
+        {
+            get
+            {
+                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
+                    new List<List<KeyboardButton>>
+                    {
+                        new List<KeyboardButton>
+                        {
+                            new KeyboardButton("1"),
+                            new KeyboardButton("2"),
+                            new KeyboardButton("3"),
+                            new KeyboardButton("4"),
+                            new KeyboardButton("5"),
+                            new KeyboardButton("6"),
+                            new KeyboardButton("7"),
+                            new KeyboardButton("8"),
+                            new KeyboardButton("9"),
+                            new KeyboardButton("10"),
+                        }
+                    });
+                keyboard.ResizeKeyboard = true;
+                return keyboard;
+            }
+        }
+      
         internal static IReplyMarkup EmptyButtons
         {
             get
