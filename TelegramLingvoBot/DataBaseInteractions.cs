@@ -16,11 +16,21 @@ namespace TelegramLingvoBot
             ConnectionString = connectionString;
         }
 
+        private void SetUTF8(MySqlConnection connection)
+        {
+            using (MySqlCommand command = connection.CreateCommand())
+            {
+                command.CommandText = $"SET NAMES `utf8`;\nSET CHARACTER SET 'utf8';\nSET SESSION collation_connection = 'utf8_general_ci';";
+                command.ExecuteNonQuery();
+            }
+        }
+
         public void AddUser(User user)
         {
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
             {
                 connection.Open();
+                SetUTF8(connection);
                 using (MySqlCommand command = connection.CreateCommand())
                 {
                     command.CommandText = $"INSERT INTO users(id, QuestionAmount, DialogPosition) VALUES({ user.Id}, {user.QuestionAmount}, {(int)user.Position});";
@@ -35,6 +45,7 @@ namespace TelegramLingvoBot
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
             {
                 connection.Open();
+                SetUTF8(connection);
                 using (MySqlCommand command = connection.CreateCommand())
                 {
                     command.CommandText = $"SELECT * FROM users;";
@@ -62,6 +73,7 @@ namespace TelegramLingvoBot
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
             {
                 connection.Open();
+                SetUTF8(connection);
                 using (MySqlCommand command = connection.CreateCommand())
                 {
                     command.CommandText = $"SELECT * FROM teachers";
@@ -88,9 +100,10 @@ namespace TelegramLingvoBot
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
             {
                 connection.Open();
+                SetUTF8(connection);
                 using (MySqlCommand command = connection.CreateCommand())
                 {
-                    command.CommandText = $"UPDATE users SET QuestionAmount = {user.QuestionAmount}, DialogPosition = {(int)user.Position} WHERE id={user.Id}";
+                    command.CommandText = $"UPDATE users SET QuestionAmount = {user.QuestionAmount}, DialogPosition = {(int)user.Position}, QuestionReady = {Convert.ToInt32(user.QuestionReady)}  WHERE id={user.Id}";
                     command.ExecuteNonQuery();
                 }
             }
@@ -101,6 +114,7 @@ namespace TelegramLingvoBot
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
             {
                 connection.Open();
+                SetUTF8(connection);
                 using (MySqlCommand command = connection.CreateCommand())
                 {
                     command.CommandText = $"UPDATE teachers SET Balance = {teacher.Balance}, DialogPosition = {(int)teacher.Position} WHERE id={teacher.Id}";
@@ -117,6 +131,7 @@ namespace TelegramLingvoBot
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
             {
                 connection.Open();
+                SetUTF8(connection);
                 using (MySqlCommand command = connection.CreateCommand())
                 {
                     command.CommandText = $"SELECT Count(*) FROM questions;";
@@ -132,6 +147,7 @@ namespace TelegramLingvoBot
             }
             return total - used;
         }
+
         public long GetCountOfVerifiedAnswersOfTeacher(long teacherId)
         {
             long countOfVerifiedAnswers = 0;
@@ -139,7 +155,8 @@ namespace TelegramLingvoBot
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
             {
                 connection.Open();
-                using(MySqlCommand command = connection.CreateCommand())
+                SetUTF8(connection);
+                using (MySqlCommand command = connection.CreateCommand())
                 {
                     command.CommandText = $"SELECT COUNT(*) FROM answers WHERE TeacherId={teacherId}";
                     result = command.ExecuteScalar();
@@ -148,12 +165,14 @@ namespace TelegramLingvoBot
             }
             return countOfVerifiedAnswers;
         }
+
         public List<Answer> GetAnswersOfUser(long userId)
         {
             List<Answer> answers = new List<Answer>();
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
             {
                 connection.Open();
+                SetUTF8(connection);
                 using (MySqlCommand command = connection.CreateCommand())
                 {
                     command.CommandText = $"SELECT * FROM answers WHERE UserId = {userId};";
@@ -226,6 +245,7 @@ namespace TelegramLingvoBot
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
             {
                 connection.Open();
+                SetUTF8(connection);
                 using (MySqlCommand command = connection.CreateCommand())
                 {
                     command.CommandText = $"INSERT INTO answers (UserId, QuestionId, Text, Rate, Comment, TeacherId) VALUES ({answer.UserId}, {answer.Question.Id}, '{answer.Text}', null, null, null);";
@@ -239,19 +259,22 @@ namespace TelegramLingvoBot
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
             {
                 connection.Open();
+                SetUTF8(connection);
                 using (MySqlCommand command = connection.CreateCommand())
                 {
-                    command.CommandText = $"UPDATE answers SET UserId={work.UserId}, QuestionId={work.Question.Id}, Text='{work.Text}', Rate={work.Rate}, Comment='{work.Comment}', TeacherId={work.TeacherId} WHERE id={work.Id};";
+                    command.CommandText = $"UPDATE answers SET Rate={work.Rate}, Comment='{work.Comment}', TeacherId={work.TeacherId} WHERE id={work.Id};";
                     command.ExecuteNonQuery();
                 }
             }
         }
+
         public Answer? GetFirstAnswer()
         {
             Answer? answer = null;
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
             {
                 connection.Open();
+                SetUTF8(connection);
                 using (MySqlCommand command = connection.CreateCommand())
                 {
                     command.CommandText = $"SELECT * FROM answers WHERE Rate is null";
@@ -313,12 +336,14 @@ namespace TelegramLingvoBot
             }
             return answer;
         }
+
         public Answer? GetAnswer(long answerId)
         {
             Answer? answer = null;
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
             {
                 connection.Open();
+                SetUTF8(connection);
                 using (MySqlCommand command = connection.CreateCommand())
                 {
                     command.CommandText = $"SELECT * FROM answers WHERE id={answerId};";
@@ -389,10 +414,10 @@ namespace TelegramLingvoBot
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
             {
                 connection.Open();
+                SetUTF8(connection);
                 using (MySqlCommand command = connection.CreateCommand())
                 {
                     command.CommandText = $"SELECT AVG(Rate) AS RateAVG FROM answers WHERE UserId={userId}";
-                    returnObject = command.ExecuteScalar();
                     returnObject = command.ExecuteScalar();
                     rating = returnObject == DBNull.Value ? 0 : (decimal)returnObject;
                 }
@@ -406,6 +431,7 @@ namespace TelegramLingvoBot
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
             {
                 connection.Open();
+                SetUTF8(connection);
                 using (MySqlCommand command = connection.CreateCommand())
                 {
                     command.CommandText = $"SELECT * FROM questions WHERE Type = {(int)type};";
@@ -447,6 +473,7 @@ namespace TelegramLingvoBot
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
             {
                 connection.Open();
+                SetUTF8(connection);
                 using (MySqlCommand command = connection.CreateCommand())
                 {
                     command.CommandText = $"SELECT QuestionId FROM answers WHERE UserId = {userId};";
@@ -484,6 +511,18 @@ namespace TelegramLingvoBot
                 }
             }
             return returnList;
+        }
+
+        public void SetAllUsersReady()
+        {
+            using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+            {
+                using (MySqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = $"UPDATE users SET QuestionReady = 1;";
+                    command.ExecuteNonQuery();
+                }
+            }
         }
     }
 }

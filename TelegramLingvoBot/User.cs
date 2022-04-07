@@ -32,6 +32,11 @@ namespace TelegramLingvoBot
             dbInteract.UpdateUser(this);
         }
 
+        public static void ResetReadyAllUsers(DataBaseInteractions dbInteract, List<User> users)
+        {
+            users.ForEach(u => u.QuestionReady = true);
+            dbInteract.SetAllUsersReady();
+        }
 
         public void SetReady(DataBaseInteractions dbInteract, bool ready)
         {

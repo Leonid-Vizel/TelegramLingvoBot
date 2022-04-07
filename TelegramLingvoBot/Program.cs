@@ -7,12 +7,14 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.Payments;
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramLingvoBot;
+using System.Timers;
 
 #region BaseLoading
-DataBaseInteractions dbInteract = new DataBaseInteractions("Server=wpl36.hosting.reg.ru;Database=u1615366_LingvoHack;User Id=u1615366_LingvoHack;Password=y21e&B4a;");
+DataBaseInteractions dbInteract = new DataBaseInteractions("Server=wpl36.hosting.reg.ru;Database=u1615366_LingvoHack;User Id=u1615366_LingvoHack;Password=y21e&B4a;charset=utf8;");
 List<AwaitingAsnwer> awaitingAsnwers = new List<AwaitingAsnwer>();
 List<TelegramLingvoBot.User> Users = dbInteract.GetAllUsers();
 List<TelegramLingvoBot.Teacher> Teachers = dbInteract.GetAllTeachers();
+System.Timers.Timer mainTimer;
 #endregion
 
 #region Starting the bot
@@ -58,6 +60,20 @@ foreach (TelegramLingvoBot.User user in Users.Where(x => x.Position == DialogPos
     await botClient.SendTextMessageAsync(chatId: user.Id, text: "Приносим свои извинения.\nПроизошла критическая ошибка бота и Ваш вопрос был сброшен. Попробуйте снова. Ваши оплаченные вопросы не убавились.", cancellationToken: cts.Token, replyMarkup: ButtonBank.UserMainMenuButtons);
     user.SetPosition(dbInteract, DialogPosition.MainMenu);
 }
+
+
+DateTime TimeToExecuteTask;
+if (DateTime.Now.Hour < 10)
+{
+    TimeToExecuteTask = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 10, 0, 0);
+}
+else
+{
+    TimeToExecuteTask = new DateTime(DateTime.Now.Year, DateTime.Now.Month,DateTime.Now.Day + 1,10,0,0);
+}
+mainTimer = new System.Timers.Timer((TimeToExecuteTask - DateTime.Now).TotalMilliseconds);
+mainTimer.Elapsed += ResetAllUsers;
+mainTimer.Start();
 Console.ReadLine();
 
 // Send cancellation request to stop bot
@@ -66,7 +82,7 @@ cts.Cancel();
 
 async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
 {
-    if (update.Type == UpdateType.PreCheckoutQuery)
+    if (update.Type == UpdateType.PreCheckoutQuery && update.PreCheckoutQuery != null)
     {
         string[] decodeArray = update.PreCheckoutQuery.InvoicePayload.Split('-');
         long userId = long.Parse(decodeArray[0]);
@@ -260,7 +276,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
                         }
                     }
                     await botClient.SendTextMessageAsync(chatId: chatId, text: worksBuilder.ToString(), cancellationToken: cancellationToken, replyMarkup: null);
-                    await botClient.SendTextMessageAsync(chatId: chatId, text: "Введите Id работы, которую хотите посмотреть:", cancellationToken: cancellationToken, replyMarkup: null);
+                    await botClient.SendTextMessageAsync(chatId: chatId, text: "Введите Id работы, которую хотите посмотреть:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
                     user.SetPosition(dbInteract, DialogPosition.ChooseWorkId);
                     break;
                 case "Назад в главное меню":
@@ -354,6 +370,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
                     teacher.CurrentAnswer.Rate = rate;
                     dbInteract.UpdateAnswer(teacher.CurrentAnswer);
                     teacher.AddBalance(dbInteract, 25);
+                    await botClient.SendTextMessageAsync(chatId: teacher.CurrentAnswer.UserId, text: $"Ваша работа (ID:{teacher.CurrentAnswer.Id}) проверена!\nВы моежете посмотреть свои результаты в разделе 'Работы'.", cancellationToken: cancellationToken);
                     teacher.CurrentAnswer = null;
                     teacher.SetPosition(dbInteract, DialogPosition.TeacherMainMenu);
                     await botClient.SendTextMessageAsync(chatId: chatId, text: "Отлично! Ваша проверка отправлена! На Ваш баланс добавлено: 25 рублей", cancellationToken: cancellationToken, replyMarkup: teacherMainMenuButtons);
@@ -421,6 +438,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
                 {
                     awaitingAsnwer.StopDestroy();
                     user.SetPosition(dbInteract, DialogPosition.MainMenu);
+                    user.SetReady(dbInteract, false);
                     user.DecrementQuestion(dbInteract);
                     dbInteract.AddAnswer(awaitingAsnwer.ToAnswer(update.Message.Text));
                     await botClient.SendTextMessageAsync(chatId: chatId, text: "Отлично!\nВаша работы была отправлена на проверку. Как только работа будет проверена, мы оповестим Вас.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
@@ -441,4 +459,15 @@ Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, Cancell
 
     Console.WriteLine(ErrorMessage);
     return Task.CompletedTask;
+}
+
+async void ResetAllUsers(object? sender, ElapsedEventArgs e)
+{
+    CancellationToken token = (CancellationToken)sender;
+    IEnumerable<TelegramLingvoBot.User> usersUsedYesterday = Users.Where(x=>!x.QuestionReady).Where(x => x.QuestionAmount > 0);
+    TelegramLingvoBot.User.ResetReadyAllUsers(dbInteract,Users);
+    foreach(TelegramLingvoBot.User user in usersUsedYesterday)
+    {
+        await botClient.SendTextMessageAsync(chatId: user.Id, text: "Доброе утро! Работа готова", cancellationToken: token);
+    }
 }
