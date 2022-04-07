@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Telegram.Bot.Types.ReplyMarkups;
+﻿using Telegram.Bot.Types.ReplyMarkups;
 
 namespace TelegramLingvoBot
 {
     internal static class ButtonBank
     {
-        internal static IReplyMarkup Register
+        internal static IReplyMarkup RegisterButton
         {
             get
             {
@@ -26,7 +21,7 @@ namespace TelegramLingvoBot
             }
         }
 
-        internal static IReplyMarkup UserMainMenu
+        internal static IReplyMarkup UserMainMenuButtons
         {
             get
             {
@@ -45,7 +40,7 @@ namespace TelegramLingvoBot
             }
         }
 
-        internal static IReplyMarkup TeacherMainMenu
+        internal static IReplyMarkup TeacherMainMenuButtons
         {
             get
             {
@@ -82,7 +77,7 @@ namespace TelegramLingvoBot
             }
         }
 
-        internal static IReplyMarkup JustBack
+        internal static IReplyMarkup JustBackButton
         {
             get
             {
@@ -112,6 +107,24 @@ namespace TelegramLingvoBot
                             new KeyboardButton("50"),
                             new KeyboardButton("100"),
                             new KeyboardButton("Назад")
+                        }
+                    });
+                keyboard.ResizeKeyboard = true;
+                return keyboard;
+            }
+        }
+
+        internal static IReplyMarkup WorkShownButtons
+        {
+            get
+            {
+                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
+                    new List<List<KeyboardButton>>
+                    {
+                        new List<KeyboardButton>
+                        {
+                            new KeyboardButton("Назад к моим работам"),
+                            new KeyboardButton("Назад в главное меню"),
                         }
                     });
                 keyboard.ResizeKeyboard = true;

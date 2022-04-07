@@ -119,13 +119,13 @@ namespace TelegramLingvoBot
                 connection.Open();
                 using (MySqlCommand command = connection.CreateCommand())
                 {
-                    command.CommandText = "";
+                    command.CommandText = $"SELECT Count(*) FROM questions;";
                     result = command.ExecuteScalar();
                     total = result == DBNull.Value ? 0 : (long)result;
                 }
                 using (MySqlCommand command = connection.CreateCommand())
                 {
-                    command.CommandText = $"SELECT Count(*) FROM questions;";
+                    command.CommandText = $"SELECT COUNT(*) FROM answers WHERE UserId = {userId};";
                     result = command.ExecuteScalar();
                     used = result == DBNull.Value ? 0 : (long)result;
                 }
@@ -135,7 +135,75 @@ namespace TelegramLingvoBot
 
         public List<Answer> GetAnswersOfUser(long userId)
         {
-            throw new NotImplementedException();
+            List<Answer> answers = new List<Answer>();
+            using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+            {
+                connection.Open();
+                using (MySqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT * FROM answers WHERE UserId = {userId};";
+                    using (MySqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            while(reader.Read())
+                            {
+                                object rateRead = reader.GetValue(4);
+                                object commentRead = reader.GetValue(5);
+                                object teacherRead = reader.GetValue(6);
+                                int? rate = rateRead == DBNull.Value ? null : (int)rateRead;
+                                string? comment = commentRead == DBNull.Value ? null : (string)commentRead;
+                                long? teacherId = teacherRead == DBNull.Value ? null : (long)teacherRead;
+                                answers.Add(new Answer(reader.GetInt64(0),
+                                        reader.GetInt64(1),
+                                        new Question(reader.GetInt32(2)),
+                                        reader.GetTextReader(3).ReadToEnd(),
+                                        rate, comment, teacherId));
+                            }
+                        }
+                    }
+                }
+                List<Question> questions = new List<Question>();
+                foreach (Answer answer in answers)
+                {
+                    using (MySqlCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = $"SELECT ThemeId,Text FROM questions WHERE Id = {answer.Question.Id};";
+                        using (MySqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+                                    answer.Question.Theme = new Theme(reader.GetInt32(0));
+                                    answer.Question.Text = reader.GetTextReader(1).ReadToEnd();
+                                    questions.Add(answer.Question);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                foreach (Question question in questions)
+                {
+                    using (MySqlCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = $"SELECT Text FROM questions WHERE Id = {question.Theme.Id};";
+                        using (MySqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+                                    question.Theme.Name = reader.GetTextReader(0).ReadToEnd();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return answers;
         }
 
         public void AddAnswer(Answer answer)
@@ -164,6 +232,75 @@ namespace TelegramLingvoBot
             }
         }
 
+        public Answer? GetAnswer(long answerId)
+        {
+            Answer? answer = null;
+            using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+            {
+                connection.Open();
+                using (MySqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT * FROM answers WHERE id={answerId};";
+                    using (MySqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            object rateRead = reader.GetValue(4);
+                            object commentRead = reader.GetValue(5);
+                            object teacherRead = reader.GetValue(6);
+                            int? rate = rateRead == DBNull.Value ? null : (int)rateRead;
+                            string? comment = commentRead == DBNull.Value ? null : (string)commentRead;
+                            long? teacherId = teacherRead == DBNull.Value ? null : (long)teacherRead;
+                            answer = new Answer(reader.GetInt64(0),
+                                    reader.GetInt64(1),
+                                    new Question(reader.GetInt32(2)),
+                                    reader.GetTextReader(3).ReadToEnd(),
+                                    rate,comment,teacherId);
+                        }
+                        else
+                        {
+                            return null;
+                        }    
+                    }
+                }
+                using (MySqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT ThemeId,Text FROM questions WHERE id = {answer.Question.Id};";
+                    using (MySqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            answer.Question.Theme = new Theme(reader.GetInt32(0));
+                            answer.Question.Text = reader.GetTextReader(1).ReadToEnd();
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                }
+                using (MySqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT Text FROM themes WHERE id = {answer.Question.Theme.Id};";
+                    using (MySqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            answer.Question.Theme.Name = reader.GetTextReader(0).ReadToEnd();
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                }
+            }
+            return answer;
+        }
+
         public decimal GetUserRating(long userId)
         {
             object returnObject;
@@ -176,7 +313,7 @@ namespace TelegramLingvoBot
                     command.CommandText = $"SELECT AVG(Rate) AS RateAVG FROM answers WHERE UserId={userId}";
                     returnObject = command.ExecuteScalar();
                     returnObject = command.ExecuteScalar();
-                    rating = returnObject == DBNull.Value ? 0 : (long)returnObject;
+                    rating = returnObject == DBNull.Value ? 0 : (decimal)returnObject;
                 }
             }
             return rating;

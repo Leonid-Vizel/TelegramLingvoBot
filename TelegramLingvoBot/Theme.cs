@@ -8,13 +8,18 @@ namespace TelegramLingvoBot
 {
     internal class Theme
     {
-        public int Id { get; private set; }
-        public string Name { get; private set; }
+        public int Id { get; set; }
+        public string Name { get; set; }
 
         public Theme(int id, string name)
         {
             Id = id;
             Name = name;
+        }
+
+        public Theme(int id)
+        {
+            Id = id;
         }
     }
 }
