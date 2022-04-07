@@ -193,19 +193,8 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
-      
+
         internal static IReplyMarkup EmptyButtons
-        {
-            get
-            {
-                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
-                    new List<List<KeyboardButton>>
-                    {
-                        new List<KeyboardButton>()
-                    });
-                keyboard.ResizeKeyboard = true;
-                return keyboard;
-            }
-        }
+            => new ReplyKeyboardRemove() { };
     }
 }

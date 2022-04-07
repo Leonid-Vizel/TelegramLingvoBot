@@ -241,7 +241,7 @@ namespace TelegramLingvoBot
                 connection.Open();
                 using (MySqlCommand command = connection.CreateCommand())
                 {
-                    command.CommandText = $"UPDATE answers SET UserId={work.UserId}, QuestionId={work.Question.Id}, Text='{work.Text}', Rate={work.Rate}, Comment='{work.Comment}', TeacherId={work.TeacherId} WHERE id={work.UserId};";
+                    command.CommandText = $"UPDATE answers SET UserId={work.UserId}, QuestionId={work.Question.Id}, Text='{work.Text}', Rate={work.Rate}, Comment='{work.Comment}', TeacherId={work.TeacherId} WHERE id={work.Id};";
                     command.ExecuteNonQuery();
                 }
             }
@@ -254,7 +254,7 @@ namespace TelegramLingvoBot
                 connection.Open();
                 using (MySqlCommand command = connection.CreateCommand())
                 {
-                    command.CommandText = $"SELECT * FROM answers WHERE Rate=Null";
+                    command.CommandText = $"SELECT * FROM answers WHERE Rate is null";
                     using (MySqlDataReader reader = command.ExecuteReader())
                     {
                         if (reader.HasRows)
@@ -266,10 +266,14 @@ namespace TelegramLingvoBot
                             object textOfUserRead = reader.GetValue(3);
                             long id = (long)idRead;
                             long userId = (long)userIdRead;
-                            long QuestionId = (long)QuestionIdRead;
+                            int QuestionId = (int)QuestionIdRead;
                             string textOfUser = (string)textOfUserRead;
-                            answer = new Answer(id, userId, null, textOfUser, null, null, null);
+                            answer = new Answer(id, userId, new Question(QuestionId), textOfUser, null, null, null);
 
+                        }
+                        else
+                        {
+                            return null;
                         }
                     }
                 }

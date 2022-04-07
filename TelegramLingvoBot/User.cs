@@ -79,7 +79,6 @@ namespace TelegramLingvoBot
         ChooseWorkId,
         WorkShown,
         ShopAmount,
-        ProfileShown,
         TeacherMainMenu,
         TeacherWorkCheckComment,
         TeacherWorkCheckRate,
