@@ -82,6 +82,7 @@ namespace TelegramLingvoBot
         TeacherMainMenu,
         TeacherWorkCheckComment,
         TeacherWorkCheckRate,
+        AnswerTypeSelect, 
         WaitingForResponce
     }
 }

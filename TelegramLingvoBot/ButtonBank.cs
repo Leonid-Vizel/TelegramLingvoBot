@@ -40,25 +40,6 @@ namespace TelegramLingvoBot
             }
         }
 
-        internal static IReplyMarkup TeacherMainMenuButtons
-        {
-            get
-            {
-                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
-                    new List<List<KeyboardButton>>
-                    {
-                        new List<KeyboardButton>
-                        {
-                            new KeyboardButton("Проверить"),
-                            new KeyboardButton("Профиль"),
-                            new KeyboardButton("Вывод средств")
-                        }
-                    });
-                keyboard.ResizeKeyboard = true;
-                return keyboard;
-            }
-        }
-
         internal static IReplyMarkup YesNoButtons
         {
             get
@@ -141,6 +122,43 @@ namespace TelegramLingvoBot
                         {
                             new KeyboardButton("Назад к моим работам"),
                             new KeyboardButton("Назад в главное меню"),
+                        }
+                    });
+                keyboard.ResizeKeyboard = true;
+                return keyboard;
+            }
+        }
+
+        internal static IReplyMarkup TeacherMainMenuButtonsWithoutWithdrawalOfFunds
+        {
+            get
+            {
+                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
+                    new List<List<KeyboardButton>>
+                    {
+                        new List<KeyboardButton>
+                        {
+                            new KeyboardButton("Профиль"),
+                            new KeyboardButton("Проверить"),
+                        }
+                    });
+                keyboard.ResizeKeyboard = true;
+                return keyboard;
+            }
+        }
+
+        internal static IReplyMarkup TeacherMainMenuButtonsWithWithdrawalOfFunds
+        {
+            get
+            {
+                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
+                    new List<List<KeyboardButton>>
+                    {
+                        new List<KeyboardButton>
+                        {
+                            new KeyboardButton("Профиль"),
+                            new KeyboardButton("Проверить"),
+                            new KeyboardButton("Вывод средств"),
                         }
                     });
                 keyboard.ResizeKeyboard = true;

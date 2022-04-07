@@ -132,7 +132,22 @@ namespace TelegramLingvoBot
             }
             return total - used;
         }
-
+        public long GetCountOfVerifiedAnswersOfTeacher(long teacherId)
+        {
+            long countOfVerifiedAnswers = 0;
+            object result;
+            using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+            {
+                connection.Open();
+                using(MySqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT COUNT(*) FROM answers WHERE TeacherId={teacherId}";
+                    result = command.ExecuteScalar();
+                    countOfVerifiedAnswers = result == DBNull.Value ? 0 : (long)result;
+                }
+            }
+            return countOfVerifiedAnswers;
+        }
         public List<Answer> GetAnswersOfUser(long userId)
         {
             List<Answer> answers = new List<Answer>();
