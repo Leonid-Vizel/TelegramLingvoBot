@@ -146,7 +146,7 @@ namespace TelegramLingvoBot
                     {
                         if (reader.HasRows)
                         {
-                            while(reader.Read())
+                            while (reader.Read())
                             {
                                 object rateRead = reader.GetValue(4);
                                 object commentRead = reader.GetValue(5);
@@ -213,7 +213,7 @@ namespace TelegramLingvoBot
                 connection.Open();
                 using (MySqlCommand command = connection.CreateCommand())
                 {
-                    command.CommandText = $"INSERT INTO answers (UserId, QuestionId, Text, Rate, Comment, TeacherId) VALUES ({answer.UserId}, {answer.Question.Id}, '{answer.Text}', {answer.Rate}, '{answer.Comment}', {answer.TeacherId});";
+                    command.CommandText = $"INSERT INTO answers (UserId, QuestionId, Text, Rate, Comment, TeacherId) VALUES ({answer.UserId}, {answer.Question.Id}, '{answer.Text}', null, null, null);";
                     command.ExecuteNonQuery();
                 }
             }
@@ -256,12 +256,12 @@ namespace TelegramLingvoBot
                                     reader.GetInt64(1),
                                     new Question(reader.GetInt32(2)),
                                     reader.GetTextReader(3).ReadToEnd(),
-                                    rate,comment,teacherId);
+                                    rate, comment, teacherId);
                         }
                         else
                         {
                             return null;
-                        }    
+                        }
                     }
                 }
                 using (MySqlCommand command = connection.CreateCommand())
@@ -317,6 +317,92 @@ namespace TelegramLingvoBot
                 }
             }
             return rating;
+        }
+
+        public List<Question> GetQuestionsByType(QuestionType type)
+        {
+            List<Question> questions = new List<Question>();
+            using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+            {
+                connection.Open();
+                using (MySqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT * FROM questions WHERE Type = {(int)type};";
+                    using (MySqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                questions.Add(new Question(reader.GetInt32(0), new Theme(reader.GetInt32(1)), (QuestionType)reader.GetInt32(3), reader.GetTextReader(2).ReadToEnd()));
+                            }
+                        }
+                    }
+                }
+
+                foreach (Question question in questions)
+                {
+                    using (MySqlCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = $"SELECT Text FROM themes WHERE Id = {question.Theme.Id};";
+                        using (MySqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                reader.Read();
+                                question.Theme.Name = reader.GetTextReader(0).ReadToEnd();
+                            }
+                        }
+                    }
+                }
+
+                return questions;
+            }
+        }
+
+        public List<int> GetUserUsedQuestionIdsWithType(long userId, QuestionType type)
+        {
+            List<int> returnList = new List<int>();
+            using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+            {
+                connection.Open();
+                using (MySqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT QuestionId FROM answers WHERE UserId = {userId};";
+                    using (MySqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                returnList.Add(reader.GetInt32(0));
+                            }
+                        }
+                    }
+                }
+                List<int> correctIds = new List<int>();
+                foreach (int id in returnList)
+                {
+                    using (MySqlCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = $"SELECT Type FROM questions WHERE Id = {id};";
+                        using (MySqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+                                    if ((QuestionType)reader.GetInt32(0) == type)
+                                    {
+                                        correctIds.Add(id);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return returnList;
         }
     }
 }

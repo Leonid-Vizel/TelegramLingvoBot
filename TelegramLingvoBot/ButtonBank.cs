@@ -32,6 +32,7 @@ namespace TelegramLingvoBot
                         {
                             new KeyboardButton("Магазин"),
                             new KeyboardButton("Работы"),
+                            new KeyboardButton("Я готов"),
                             new KeyboardButton("Профиль")
                         }
                     });
@@ -94,22 +95,6 @@ namespace TelegramLingvoBot
             }
         }
 
-        internal static InlineKeyboardMarkup JustBackButtonInline
-        {
-            get
-            {
-                InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup(
-                    new List<List<InlineKeyboardButton>>
-                    {
-                        new List<InlineKeyboardButton>
-                        {
-                            new InlineKeyboardButton("Назад")
-                        }
-                    });
-                return keyboard;
-            }
-        }
-
         internal static IReplyMarkup ShopButtons
         {
             get
@@ -142,6 +127,38 @@ namespace TelegramLingvoBot
                             new KeyboardButton("Назад к моим работам"),
                             new KeyboardButton("Назад в главное меню"),
                         }
+                    });
+                keyboard.ResizeKeyboard = true;
+                return keyboard;
+            }
+        }
+
+        internal static IReplyMarkup AnswerTypeButtons
+        {
+            get
+            {
+                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
+                    new List<List<KeyboardButton>>
+                    {
+                        new List<KeyboardButton>
+                        {
+                            new KeyboardButton("Общий вопрос"),
+                            new KeyboardButton("Перевод текста"),
+                        }
+                    });
+                keyboard.ResizeKeyboard = true;
+                return keyboard;
+            }
+        }
+
+        internal static IReplyMarkup EmptyButtons
+        {
+            get
+            {
+                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
+                    new List<List<KeyboardButton>>
+                    {
+                        new List<KeyboardButton>()
                     });
                 keyboard.ResizeKeyboard = true;
                 return keyboard;
