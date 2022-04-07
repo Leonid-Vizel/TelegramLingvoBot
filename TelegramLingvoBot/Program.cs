@@ -352,19 +352,22 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             }
             break;
         case DialogPosition.WaitingForResponce:
-            AwaitingAsnwer? awaitingAsnwer = awaitingAsnwers.FirstOrDefault();
-            if (awaitingAsnwer == null)
+            if (update.Message.Text != null)
             {
-                await botClient.SendTextMessageAsync(chatId: chatId, text: "Приносим свои извинения.\nПроизошла критическая ошибка бота и Ваш вопрос был сброшен. Попробуйте снова. Ваши оплаченные вопросы не убавились.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
-                user.SetPosition(dbInteract, DialogPosition.MainMenu);
-            }
-            else
-            {
-                awaitingAsnwer.StopDestroy();
-                user.SetPosition(dbInteract, DialogPosition.MainMenu);
-                user.DecrementQuestion(dbInteract);
-                dbInteract.AddAnswer(awaitingAsnwer.ToAnswer(update.Message.Text));
-                await botClient.SendTextMessageAsync(chatId: chatId, text: "Отлично!\nВаша работы была отправлена на проверку. Как только работа будет проверена, мы оповестим Вас.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+                AwaitingAsnwer? awaitingAsnwer = awaitingAsnwers.FirstOrDefault();
+                if (awaitingAsnwer == null)
+                {
+                    await botClient.SendTextMessageAsync(chatId: chatId, text: "Приносим свои извинения.\nПроизошла критическая ошибка бота и Ваш вопрос был сброшен. Попробуйте снова. Ваши оплаченные вопросы не убавились.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+                    user.SetPosition(dbInteract, DialogPosition.MainMenu);
+                }
+                else
+                {
+                    awaitingAsnwer.StopDestroy();
+                    user.SetPosition(dbInteract, DialogPosition.MainMenu);
+                    user.DecrementQuestion(dbInteract);
+                    dbInteract.AddAnswer(awaitingAsnwer.ToAnswer(update.Message.Text));
+                    await botClient.SendTextMessageAsync(chatId: chatId, text: "Отлично!\nВаша работы была отправлена на проверку. Как только работа будет проверена, мы оповестим Вас.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+                }
             }
             break;
     }
