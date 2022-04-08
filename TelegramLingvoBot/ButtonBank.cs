@@ -140,6 +140,7 @@ namespace TelegramLingvoBot
                         {
                             new KeyboardButton("Общий вопрос"),
                             new KeyboardButton("Перевод текста"),
+                            new KeyboardButton("Назад")
                         }
                     });
                 keyboard.ResizeKeyboard = true;

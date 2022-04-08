@@ -58,7 +58,7 @@ Console.WriteLine($"Start listening for @{me.Username}");
 foreach (TelegramLingvoBot.User user in Users.Where(x => x.Position == DialogPosition.WaitingForResponce))
 {
     await botClient.SendTextMessageAsync(chatId: user.Id, text: "Приносим свои извинения.\nПроизошла критическая ошибка бота и Ваш вопрос был сброшен. Попробуйте снова. Ваши оплаченные вопросы не убавились.", cancellationToken: cts.Token, replyMarkup: ButtonBank.UserMainMenuButtons);
-    user.SetPosition(dbInteract, DialogPosition.MainMenu);
+    await user.SetPosition(dbInteract, DialogPosition.MainMenu);
 }
 
 
@@ -82,13 +82,13 @@ cts.Cancel();
 
 async Task ProcessingUserMainMenuShop(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
 {
-    await botClient.SendTextMessageAsync(chatId: chatId, text: $"Добро пожаловать в магазин! Доступно {dbInteract.GetUserAvailibleQuestionsAmount(chatId)} вопросов.\nВыберите кол - во вопросов которое хотите купить:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ShopButtons);
-    user.SetPosition(dbInteract, DialogPosition.ShopAmount);
+    await botClient.SendTextMessageAsync(chatId: chatId, text: $"Добро пожаловать в магазин! Доступно {await dbInteract.GetUserAvailibleQuestionsAmount(chatId)} вопросов.\nВыберите кол - во вопросов которое хотите купить:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ShopButtons);
+    await user.SetPosition(dbInteract, DialogPosition.ShopAmount);
 }
 async Task ProcessingUserMainMenuWork(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
 {
     StringBuilder worksBuilder = new StringBuilder("Список ваших работ:\n");
-    List<Answer> answersOfUser = dbInteract.GetAnswersOfUser(chatId);
+    List<Answer> answersOfUser = await dbInteract.GetAnswersOfUser(chatId);
     if (answersOfUser.Count > 0)
     {
         foreach (Answer answer in answersOfUser)
@@ -105,12 +105,12 @@ async Task ProcessingUserMainMenuWork(TelegramLingvoBot.User? user, ITelegramBot
         }
         await botClient.SendTextMessageAsync(chatId: chatId, text: worksBuilder.ToString(), cancellationToken: cancellationToken, replyMarkup: null);
         await botClient.SendTextMessageAsync(chatId: chatId, text: "Введите Id работы, которую хотите посмотреть:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
-        user.SetPosition(dbInteract, DialogPosition.ChooseWorkId);
+        await user.SetPosition(dbInteract, DialogPosition.ChooseWorkId);
     }
     else
     {
         await botClient.SendTextMessageAsync(chatId: chatId, text: "У тебя пока нет написанных работ.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
-        user.SetPosition(dbInteract, DialogPosition.MainMenu);
+        await user.SetPosition(dbInteract, DialogPosition.MainMenu);
     }
 }
 async Task ProcessngUserMainMenuUserIsReady(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
@@ -120,7 +120,7 @@ async Task ProcessngUserMainMenuUserIsReady(TelegramLingvoBot.User? user, ITeleg
         if (user.QuestionAmount > 0)
         {
             await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите тип вопроса:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.AnswerTypeButtons);
-            user.SetPosition(dbInteract, DialogPosition.AnswerTypeSelect);
+            await user.SetPosition(dbInteract, DialogPosition.AnswerTypeSelect);
         }
         else
         {
@@ -150,21 +150,20 @@ async Task ProcessingUserMainMenuProfile(TelegramLingvoBot.User? user, ITelegram
 {
     StringBuilder builder = new StringBuilder();
     builder.AppendLine($"Ваш Id в системе: {user.Id}");
-    builder.AppendLine($"Ваш рейтинг: {dbInteract.GetUserRating(user.Id)}");
+    builder.AppendLine($"Ваш рейтинг: {await dbInteract.GetUserRating(user.Id)}");
     builder.AppendLine($"Количество оплаченных вопросов: {user.QuestionAmount}");
-    await botClient.SendTextMessageAsync(chatId: chatId, text: builder.ToString(), cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
-    user.SetPosition(dbInteract, DialogPosition.ProfileShown);
+    await botClient.SendTextMessageAsync(chatId: chatId, text: builder.ToString(), cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
 }
 async Task ProcessingUserChooseWorkIdBack(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
 {
     await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
-    user.SetPosition(dbInteract, DialogPosition.MainMenu);
+    await user.SetPosition(dbInteract, DialogPosition.MainMenu);
 }
 async Task ProcessingUserChooseWorkIdIsNotFound(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
 {
     if (long.TryParse(update.Message.Text, out long result))
     {
-        Answer? answer = dbInteract.GetAnswer(result);
+        Answer? answer = await dbInteract.GetAnswer(result);
         if (answer == null)
         {
             await botClient.SendTextMessageAsync(chatId: chatId, text: "Работа с таким Id не была найдена! 🤖🤖🤖\nВведите Id работы, которую хотите посмотреть:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
@@ -189,7 +188,7 @@ async Task ProcessingUserChooseWorkIdIsNotFound(TelegramLingvoBot.User? user, IT
                 await botClient.SendTextMessageAsync(chatId: chatId, text: $"Комментарий эксперта:\n{answer.Comment}", cancellationToken: cancellationToken);
             }
             await botClient.SendTextMessageAsync(chatId: chatId, text: $"Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.WorkShownButtons);
-            user.SetPosition(dbInteract, DialogPosition.WorkShown);
+            await user.SetPosition(dbInteract, DialogPosition.WorkShown);
         }
     }
     else
@@ -200,7 +199,7 @@ async Task ProcessingUserChooseWorkIdIsNotFound(TelegramLingvoBot.User? user, IT
 async Task ProcessingUserBackToUserWork(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
 {
     StringBuilder worksBuilder = new StringBuilder("Список ваших работ:\n");
-    List<Answer> answersOfUser = dbInteract.GetAnswersOfUser(chatId);
+    List<Answer> answersOfUser = await dbInteract.GetAnswersOfUser(chatId);
     foreach (Answer work in answersOfUser)
     {
         if (work.Question.Type == QuestionType.GeneralQuestion)
@@ -215,12 +214,12 @@ async Task ProcessingUserBackToUserWork(TelegramLingvoBot.User? user, ITelegramB
     }
     await botClient.SendTextMessageAsync(chatId: chatId, text: worksBuilder.ToString(), cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
     await botClient.SendTextMessageAsync(chatId: chatId, text: "Введите Id работы, которую хотите посмотреть:", cancellationToken: cancellationToken, replyMarkup: null);
-    user.SetPosition(dbInteract, DialogPosition.ChooseWorkId);
+    await user.SetPosition(dbInteract, DialogPosition.ChooseWorkId);
 }
 async Task ProcessingUserBackToMainMenuWork(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
 {
     await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
-    user.SetPosition(dbInteract, DialogPosition.MainMenu);
+    await user.SetPosition(dbInteract, DialogPosition.MainMenu);
 }
 async Task ProcessingUserShopAmount(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
 {
@@ -241,29 +240,16 @@ async Task ProcessingUserShopAmount(TelegramLingvoBot.User? user, ITelegramBotCl
             break;
         case "Назад":
             await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
-            user.SetPosition(dbInteract, DialogPosition.MainMenu);
+            await user.SetPosition(dbInteract, DialogPosition.MainMenu);
             break;
         default:
             await botClient.SendTextMessageAsync(chatId: chatId, text: "Извините, я Вас не понял 🤖🤖🤖\nВыберите кол - во вопросов которое хотите купить:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ShopButtons);
             break;
     }
 }
-async Task ProcessingUserProfileShown(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
-{
-    switch (update.Message.Text)
-    {
-        case "Назад":
-            await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
-            user.SetPosition(dbInteract, DialogPosition.MainMenu);
-            break;
-        default:
-            await botClient.SendTextMessageAsync(chatId: chatId, text: "Извините, я Вас не понял 🤖🤖🤖", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
-            break;
-    }
-}
 async Task ProcessingTeacherMainMenuProfile(TelegramLingvoBot.Teacher? teacher, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId, IReplyMarkup teacherMainMenuButtons)
 {
-    long countOfVerifiedAnswersOfTeacher = dbInteract.GetCountOfVerifiedAnswersOfTeacher(teacher.Id);
+    long countOfVerifiedAnswersOfTeacher = await dbInteract.GetCountOfVerifiedAnswersOfTeacher(teacher.Id);
     StringBuilder TeacherProfileText = new StringBuilder();
     TeacherProfileText.AppendLine($"Ваш Id в системе: {teacher.Id}");
     TeacherProfileText.AppendLine($"Количество проверенных работ: {countOfVerifiedAnswersOfTeacher}");
@@ -272,7 +258,7 @@ async Task ProcessingTeacherMainMenuProfile(TelegramLingvoBot.Teacher? teacher, 
 }
 async Task ProcessingTeacherMainMenuCheckAnswer(TelegramLingvoBot.Teacher? teacher, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId, IReplyMarkup teacherMainMenuButtons)
 {
-    Answer answer = dbInteract.GetFirstAnswer();
+    Answer? answer = await dbInteract.GetFirstAnswer();
     if (answer == null && teacher.CurrentAnswer == null)
     {
         await botClient.SendTextMessageAsync(chatId: chatId, text: "Работ на проверку пока нет", cancellationToken: cancellationToken, replyMarkup: teacherMainMenuButtons);
@@ -281,7 +267,7 @@ async Task ProcessingTeacherMainMenuCheckAnswer(TelegramLingvoBot.Teacher? teach
     {
         teacher.CurrentAnswer = answer;
         answer.TeacherId = teacher.Id;
-        teacher.SetPosition(dbInteract, DialogPosition.TeacherWorkCheckComment);
+        await teacher.SetPosition(dbInteract, DialogPosition.TeacherWorkCheckComment);
         await botClient.SendTextMessageAsync(chatId: chatId, text: $"Есть работа на проверку!\nВопрос: {answer.Question.Text}\nТекст: {answer.Text}\nВведите комментарий: ", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
     }
 }
@@ -290,14 +276,14 @@ async Task ProcessingTeacherWorkCheckComment(TelegramLingvoBot.Teacher? teacher,
     if (update.Message.Text != "")
     {
         teacher.CurrentAnswer.Comment = update.Message.Text;
-        teacher.SetPosition(dbInteract, DialogPosition.TeacherWorkCheckRate);
+        await teacher.SetPosition(dbInteract, DialogPosition.TeacherWorkCheckRate);
         await botClient.SendTextMessageAsync(chatId: chatId, text: "Укажите оценку от 1 до 10:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.RateForAnswerButtons);
     }
 }
 async Task ProcessingTeacherWorkCheckRate(TelegramLingvoBot.Teacher? teacher, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId, IReplyMarkup teacherMainMenuButtons)
 {
     teacherMainMenuButtons = ButtonBank.TeacherMainMenuButtonsWithWithdrawalOfFunds;
-    long countOfVerifiedAnswersOfTeacher = dbInteract.GetCountOfVerifiedAnswersOfTeacher(teacher.Id);
+    long countOfVerifiedAnswersOfTeacher = await dbInteract.GetCountOfVerifiedAnswersOfTeacher(teacher.Id);
     if (teacher.Balance < 100)
     {
         teacherMainMenuButtons = ButtonBank.TeacherMainMenuButtonsWithoutWithdrawalOfFunds;
@@ -307,11 +293,11 @@ async Task ProcessingTeacherWorkCheckRate(TelegramLingvoBot.Teacher? teacher, IT
         if (0 < rate && rate <= 10)
         {
             teacher.CurrentAnswer.Rate = rate;
-            dbInteract.UpdateAnswer(teacher.CurrentAnswer);
-            teacher.AddBalance(dbInteract, 25);
+            await dbInteract.UpdateAnswer(teacher.CurrentAnswer);
+            await teacher.AddBalance(dbInteract, 25);
             await botClient.SendTextMessageAsync(chatId: teacher.CurrentAnswer.UserId, text: $"Ваша работа (ID:{teacher.CurrentAnswer.Id}) проверена!\nВы моежете посмотреть свои результаты в разделе 'Работы'.", cancellationToken: cancellationToken);
             teacher.CurrentAnswer = null;
-            teacher.SetPosition(dbInteract, DialogPosition.TeacherMainMenu);
+            await teacher.SetPosition(dbInteract, DialogPosition.TeacherMainMenu);
             await botClient.SendTextMessageAsync(chatId: chatId, text: "Отлично! Ваша проверка отправлена! На Ваш баланс добавлено: 25 рублей", cancellationToken: cancellationToken, replyMarkup: teacherMainMenuButtons);
         }
     }
@@ -322,8 +308,8 @@ async Task ProcessingTeacherWorkCheckRate(TelegramLingvoBot.Teacher? teacher, IT
 }
 async Task ProcessingUserAnswerTypeSelectCommonQuestions(TelegramLingvoBot.Teacher? teacher, TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
 {
-    List<Question> questions = dbInteract.GetQuestionsByType(QuestionType.GeneralQuestion);
-    List<int> userQuestionIds = dbInteract.GetUserUsedQuestionIdsWithType(chatId, QuestionType.GeneralQuestion);
+    List<Question> questions = await dbInteract.GetQuestionsByType(QuestionType.GeneralQuestion);
+    List<int> userQuestionIds = await dbInteract.GetUserUsedQuestionIdsWithType(chatId, QuestionType.GeneralQuestion);
     Question question;
     if (questions.Count <= userQuestionIds.Count)
     {
@@ -336,13 +322,13 @@ async Task ProcessingUserAnswerTypeSelectCommonQuestions(TelegramLingvoBot.Teach
         question = questions[0];
     }
     await botClient.SendTextMessageAsync(chatId: chatId, text: $"Ваш сегодняшний вопрос:\n{question.Text}\nНа ответ даётся 5 минут.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
-    user.SetPosition(dbInteract, DialogPosition.WaitingForResponce);
+    await user.SetPosition(dbInteract, DialogPosition.WaitingForResponce);
     awaitingAsnwers.Add(new AwaitingAsnwer(botClient, cancellationToken, awaitingAsnwers, dbInteract, user, question));
 }
 async Task ProcessingUserAnswerTypeSelectTranslateText(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
 {
-    List<Question> translates = dbInteract.GetQuestionsByType(QuestionType.GeneralQuestion);
-    List<int> userTranslateIds = dbInteract.GetUserUsedQuestionIdsWithType(chatId, QuestionType.GeneralQuestion);
+    List<Question> translates = await dbInteract.GetQuestionsByType(QuestionType.GeneralQuestion);
+    List<int> userTranslateIds = await dbInteract.GetUserUsedQuestionIdsWithType(chatId, QuestionType.GeneralQuestion);
     Question translate;
     if (translates.Count <= userTranslateIds.Count)
     {
@@ -355,7 +341,7 @@ async Task ProcessingUserAnswerTypeSelectTranslateText(TelegramLingvoBot.User? u
         translate = translates[0];
     }
     await botClient.SendTextMessageAsync(chatId: chatId, text: $"Ваше сегодняшнее задание:\n{translate.Text}\nНа перевод даётся 8 минут.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
-    user.SetPosition(dbInteract, DialogPosition.WaitingForResponce);
+    await user.SetPosition(dbInteract, DialogPosition.WaitingForResponce);
     awaitingAsnwers.Add(new AwaitingAsnwer(botClient, cancellationToken, awaitingAsnwers, dbInteract, user, translate));
 }
 async Task ProcessingUserWaitingForResponce(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
@@ -366,15 +352,15 @@ async Task ProcessingUserWaitingForResponce(TelegramLingvoBot.User? user, ITeleg
         if (awaitingAsnwer == null)
         {
             await botClient.SendTextMessageAsync(chatId: chatId, text: "Приносим свои извинения.\nПроизошла критическая ошибка бота и Ваш вопрос был сброшен. Попробуйте снова. Ваши оплаченные вопросы не убавились.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
-            user.SetPosition(dbInteract, DialogPosition.MainMenu);
+            await user.SetPosition(dbInteract, DialogPosition.MainMenu);
         }
         else
         {
             awaitingAsnwer.StopDestroy();
-            user.SetPosition(dbInteract, DialogPosition.MainMenu);
-            user.SetReady(dbInteract, false);
-            user.DecrementQuestion(dbInteract);
-            dbInteract.AddAnswer(awaitingAsnwer.ToAnswer(update.Message.Text));
+            await user.SetPosition(dbInteract, DialogPosition.MainMenu);
+            await user.SetReady(dbInteract, false);
+            await user.DecrementQuestion(dbInteract);
+            await dbInteract.AddAnswer(awaitingAsnwer.ToAnswer(update.Message.Text));
             await botClient.SendTextMessageAsync(chatId: chatId, text: "Отлично!\nВаша работы была отправлена на проверку. Как только работа будет проверена, мы оповестим Вас.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
         }
     }
@@ -389,7 +375,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
         TelegramLingvoBot.User? payUser = Users.FirstOrDefault(x => x.Id == userId);
         if (payUser != null)
         {
-            payUser.AddQuestions(dbInteract, amount);
+            await payUser.AddQuestions(dbInteract, amount);
             await botClient.SendTextMessageAsync(chatId: userId, text: $"Спасибо за покупку! На ваш акканут добавлено {amount} вопросов!", cancellationToken: cancellationToken);
             await botClient.AnswerPreCheckoutQueryAsync(update.PreCheckoutQuery.Id);
         }
@@ -416,7 +402,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             {
                 user = new TelegramLingvoBot.User(chatId);
                 Users.Add(user);
-                dbInteract.AddUser(user);
+                await dbInteract.AddUser(user);
                 await botClient.SendTextMessageAsync(chatId: chatId, text: "Спасибо за регистрацию! У Вас Есть 1 пробный вопрос.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
             }
             else
@@ -525,6 +511,9 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
                 case "Перевод текста":
                     await ProcessingUserAnswerTypeSelectTranslateText(user, botClient, update, cancellationToken, chatId);
                     break;
+                case "Назад":
+                    await ProcessingUserBackToMainMenuWork(user, botClient, update, cancellationToken, chatId);
+                    break;
                 default:
                     await botClient.SendTextMessageAsync(chatId: chatId, text: "Извините, я Вас не понял 🤖🤖🤖\nВыберите тип вопроса:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.AnswerTypeButtons);
                     break;
@@ -553,7 +542,7 @@ async void ResetAllUsers(object? sender, ElapsedEventArgs e)
 {
     CancellationToken token = (CancellationToken)sender;
     IEnumerable<TelegramLingvoBot.User> usersUsedYesterday = Users.Where(x=>!x.QuestionReady).Where(x => x.QuestionAmount > 0);
-    TelegramLingvoBot.User.ResetReadyAllUsers(dbInteract,Users);
+    await TelegramLingvoBot.User.ResetReadyAllUsers(dbInteract,Users);
     foreach(TelegramLingvoBot.User user in usersUsedYesterday)
     {
         await botClient.SendTextMessageAsync(chatId: user.Id, text: "Доброе утро! Работа готова", cancellationToken: token);
