@@ -64,6 +64,187 @@ Console.ReadLine();
 cts.Cancel();
 #endregion
 
+async Task ProcessingUserMainMenuShop(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
+{
+    await botClient.SendTextMessageAsync(chatId: chatId, text: $"Добро пожаловать в магазин! Доступно {dbInteract.GetUserAvailibleQuestionsAmount(chatId)} вопросов.\nВыберите кол - во вопросов которое хотите купить:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ShopButtons);
+    user.SetPosition(dbInteract, DialogPosition.ShopAmount);
+}
+async Task ProcessingUserMainMenuWork(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
+{
+    StringBuilder worksBuilder = new StringBuilder("Список ваших работ:\n");
+    List<Answer> answersOfUser = dbInteract.GetAnswersOfUser(chatId);
+    if (answersOfUser.Count > 0)
+    {
+        foreach (Answer answer in answersOfUser)
+        {
+            string checkedString = answer.Rate == null ? "Не проверен" : "Проверен";
+            if (answer.Question.Type == QuestionType.GeneralQuestion)
+            {
+                worksBuilder.AppendLine($"{answer.Id}) {answer.Question.Text} - {checkedString}");
+            }
+            else
+            {
+                worksBuilder.AppendLine($"{answer.Id}) Перевод текста - {checkedString}");
+            }
+        }
+        await botClient.SendTextMessageAsync(chatId: chatId, text: worksBuilder.ToString(), cancellationToken: cancellationToken, replyMarkup: null);
+        await botClient.SendTextMessageAsync(chatId: chatId, text: "Введите Id работы, которую хотите посмотреть:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
+        user.SetPosition(dbInteract, DialogPosition.ChooseWorkId);
+    }
+    else
+    {
+        await botClient.SendTextMessageAsync(chatId: chatId, text: "У тебя пока нет написанных работ.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+        user.SetPosition(dbInteract, DialogPosition.MainMenu);
+    }
+}
+async Task ProcessngUserMainMenuUserIsReady(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
+{
+    if (user.QuestionReady)
+    {
+        if (user.QuestionAmount > 0)
+        {
+            await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите тип вопроса:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.AnswerTypeButtons);
+            user.SetPosition(dbInteract, DialogPosition.AnswerTypeSelect);
+        }
+        else
+        {
+            await botClient.SendTextMessageAsync(chatId: chatId, text: "У вас на аккаунте не имеется оплаченных вопросов.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+        }
+    }
+    else
+    {
+        if (user.QuestionAmount > 0)
+        {
+            if (DateTime.Now.Hour < 10)
+            {
+                await botClient.SendTextMessageAsync(chatId: chatId, text: $"Вы уже использовали вопрос!\nСледующий вопрос придёт Вам {DateTime.Now.ToString("dd.MM.yyy")} в 10:00 по Московскому времени.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+            }
+            else
+            {
+                await botClient.SendTextMessageAsync(chatId: chatId, text: $"Вы уже использовали вопрос!\nСледующий вопрос придёт Вам {new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day + 1).ToString("dd.MM.yyy")} в 10:00 по Московскому времени.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+            }
+        }
+        else
+        {
+            await botClient.SendTextMessageAsync(chatId: chatId, text: "У вас на аккаунте не имеется оплаченных вопросов.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+        }
+    }
+}
+async Task ProcessingUserMainMenuProfile(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
+{
+    StringBuilder builder = new StringBuilder();
+    builder.AppendLine($"Ваш Id в системе: {user.Id}");
+    builder.AppendLine($"Ваш рейтинг: {dbInteract.GetUserRating(user.Id)}");
+    builder.AppendLine($"Количество оплаченных вопросов: {user.QuestionAmount}");
+    await botClient.SendTextMessageAsync(chatId: chatId, text: builder.ToString(), cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
+    user.SetPosition(dbInteract, DialogPosition.ProfileShown);
+}
+async Task ProcessingUserChooseWorkIdBack(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
+{
+    await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+    user.SetPosition(dbInteract, DialogPosition.MainMenu);
+}
+async Task ProcessingUserChooseWorkIdIsNotFound(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
+{
+    if (long.TryParse(update.Message.Text, out long result))
+    {
+        Answer? answer = dbInteract.GetAnswer(result);
+        if (answer == null)
+        {
+            await botClient.SendTextMessageAsync(chatId: chatId, text: "Работа с таким Id не была найдена! 🤖🤖🤖\nВведите Id работы, которую хотите посмотреть:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
+        }
+        else
+        {
+            await botClient.SendTextMessageAsync(chatId: chatId, text: $"Работа #{answer.Id}", cancellationToken: cancellationToken);
+            await botClient.SendTextMessageAsync(chatId: chatId, text: $"Тема: {answer.Question.Theme.Name}", cancellationToken: cancellationToken);
+            await botClient.SendTextMessageAsync(chatId: chatId, text: $"Вопрос: {answer.Question.Text}", cancellationToken: cancellationToken);
+            if (answer.Rate == null)
+            {
+                await botClient.SendTextMessageAsync(chatId: chatId, text: $"Работа проверена: Нет", cancellationToken: cancellationToken);
+            }
+            else
+            {
+                await botClient.SendTextMessageAsync(chatId: chatId, text: $"Работа проверена: Да", cancellationToken: cancellationToken);
+            }
+            await botClient.SendTextMessageAsync(chatId: chatId, text: $"Текст работы:\n{answer.Text}", cancellationToken: cancellationToken);
+            if (answer.Rate != null)
+            {
+                await botClient.SendTextMessageAsync(chatId: chatId, text: $"Оценка эксперта: {answer.Rate}/10", cancellationToken: cancellationToken);
+                await botClient.SendTextMessageAsync(chatId: chatId, text: $"Комментарий эксперта:\n{answer.Comment}", cancellationToken: cancellationToken);
+            }
+            await botClient.SendTextMessageAsync(chatId: chatId, text: $"Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.WorkShownButtons);
+            user.SetPosition(dbInteract, DialogPosition.WorkShown);
+        }
+    }
+    else
+    {
+        await botClient.SendTextMessageAsync(chatId: chatId, text: "Кажется Вы ввели что-то неправильно 🤖🤖🤖\nВведите Id работы, которую хотите посмотреть:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
+    }
+}
+async Task ProcessingUserBackToUserWork(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
+{
+    StringBuilder worksBuilder = new StringBuilder("Список ваших работ:\n");
+    List<Answer> answersOfUser = dbInteract.GetAnswersOfUser(chatId);
+    foreach (Answer work in answersOfUser)
+    {
+        if (work.Question.Type == QuestionType.GeneralQuestion)
+        {
+            string checkedString = work.Rate == null ? "Не проверен" : "Проверен";
+            worksBuilder.AppendLine($"{work.Id}) {work.Question.Text} - {checkedString}");
+        }
+        else
+        {
+            worksBuilder.AppendLine($"{work.Id}) Перевод текста");
+        }
+    }
+    await botClient.SendTextMessageAsync(chatId: chatId, text: worksBuilder.ToString(), cancellationToken: cancellationToken, replyMarkup: null);
+    await botClient.SendTextMessageAsync(chatId: chatId, text: "Введите Id работы, которую хотите посмотреть:", cancellationToken: cancellationToken, replyMarkup: null);
+    user.SetPosition(dbInteract, DialogPosition.ChooseWorkId);
+}
+async Task ProcessingUserBackToMainMenuWork(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
+{
+    await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+    user.SetPosition(dbInteract, DialogPosition.MainMenu);
+}
+async Task ProcessingUserShopAmount(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
+{
+    List<LabeledPrice> myList = new List<LabeledPrice>();
+    switch (update.Message.Text)
+    {
+        case "10":
+            myList.Add(new LabeledPrice("Цена", 50000));
+            await botClient.SendInvoiceAsync(chatId: chatId, title: "Покупка вопросов", description: "10 вопросов", payload: $"{chatId}-10", providerToken: "381764678:TEST:35685", currency: "RUB", myList);
+            break;
+        case "50":
+            myList.Add(new LabeledPrice("Цена", 230000));
+            await botClient.SendInvoiceAsync(chatId: chatId, title: "Покупка вопросов", description: "50 вопросов", payload: $"{chatId}-50", providerToken: "381764678:TEST:35685", currency: "RUB", myList);
+            break;
+        case "100":
+            myList.Add(new LabeledPrice("Цена", 450000));
+            await botClient.SendInvoiceAsync(chatId: chatId, title: "Покупка вопросов", description: "100 вопросов", payload: $"{chatId}-100", providerToken: "381764678:TEST:35685", currency: "RUB", myList);
+            break;
+        case "Назад":
+            await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+            user.SetPosition(dbInteract, DialogPosition.MainMenu);
+            break;
+        default:
+            await botClient.SendTextMessageAsync(chatId: chatId, text: "Извините, я Вас не понял 🤖🤖🤖\nВыберите кол - во вопросов которое хотите купить:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ShopButtons);
+            break;
+    }
+}
+async Task ProcessingUserProfileShown(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, long chatId)
+{
+    switch (update.Message.Text)
+    {
+        case "Назад":
+            await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+            user.SetPosition(dbInteract, DialogPosition.MainMenu);
+            break;
+        default:
+            await botClient.SendTextMessageAsync(chatId: chatId, text: "Извините, я Вас не понял 🤖🤖🤖", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
+            break;
+    }
+}
 async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
 {
     if (update.Type == UpdateType.PreCheckoutQuery)
@@ -104,7 +285,6 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
                 await botClient.SendTextMessageAsync(chatId: chatId, text: "Привет! Зарегайся пж)", cancellationToken: cancellationToken, replyMarkup: ButtonBank.RegisterButton);
             }
         }
-        return;
     }
 
     switch (user.Position)
@@ -113,75 +293,16 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             switch (update.Message.Text)
             {
                 case "Магазин":
-                    await botClient.SendTextMessageAsync(chatId: chatId, text: $"Добро пожаловать в магазин! Доступно {dbInteract.GetUserAvailibleQuestionsAmount(chatId)} вопросов.\nВыберите кол - во вопросов которое хотите купить:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ShopButtons);
-                    user.SetPosition(dbInteract, DialogPosition.ShopAmount);
+                    await ProcessingUserMainMenuShop(user, botClient, update, cancellationToken, chatId);
                     break;
                 case "Работы":
-                    StringBuilder worksBuilder = new StringBuilder("Список ваших работ:\n");
-                    List<Answer> answersOfUser = dbInteract.GetAnswersOfUser(chatId);
-                    if (answersOfUser.Count > 0)
-                    {
-                        foreach (Answer answer in answersOfUser)
-                        {
-                            string checkedString = answer.Rate == null ? "Не проверен" : "Проверен";
-                            if (answer.Question.Type == QuestionType.GeneralQuestion)
-                            {
-                                worksBuilder.AppendLine($"{answer.Id}) {answer.Question.Text} - {checkedString}");
-                            }
-                            else
-                            {
-                                worksBuilder.AppendLine($"{answer.Id}) Перевод текста - {checkedString}");
-                            }
-                        }
-                        await botClient.SendTextMessageAsync(chatId: chatId, text: worksBuilder.ToString(), cancellationToken: cancellationToken, replyMarkup: null);
-                        await botClient.SendTextMessageAsync(chatId: chatId, text: "Введите Id работы, которую хотите посмотреть:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
-                        user.SetPosition(dbInteract, DialogPosition.ChooseWorkId);
-                    }
-                    else
-                    {
-                        await botClient.SendTextMessageAsync(chatId: chatId, text: "У тебя пока нет написанных работ.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
-                        user.SetPosition(dbInteract, DialogPosition.MainMenu);
-                    }
+                    await ProcessingUserMainMenuWork(user, botClient, update, cancellationToken, chatId);
                     break;
                 case "Я готов":
-                    if (user.QuestionReady)
-                    {
-                        if (user.QuestionAmount > 0)
-                        {
-                            await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите тип вопроса:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.AnswerTypeButtons);
-                            user.SetPosition(dbInteract, DialogPosition.AnswerTypeSelect);
-                        }
-                        else
-                        {
-                            await botClient.SendTextMessageAsync(chatId: chatId, text: "У вас на аккаунте не имеется оплаченных вопросов.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
-                        }
-                    }
-                    else
-                    {
-                        if (user.QuestionAmount > 0)
-                        {
-                            if (DateTime.Now.Hour < 10)
-                            {
-                                await botClient.SendTextMessageAsync(chatId: chatId, text: $"Вы уже использовали вопрос!\nСледующий вопрос придёт Вам {DateTime.Now.ToString("dd.MM.yyy")} в 10:00 по Московскому времени.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
-                            }
-                            else
-                            {
-                                await botClient.SendTextMessageAsync(chatId: chatId, text: $"Вы уже использовали вопрос!\nСледующий вопрос придёт Вам {new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day + 1).ToString("dd.MM.yyy")} в 10:00 по Московскому времени.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
-                            }
-                        }
-                        else
-                        {
-                            await botClient.SendTextMessageAsync(chatId: chatId, text: "У вас на аккаунте не имеется оплаченных вопросов.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
-                        }
-                    }
+                    await ProcessngUserMainMenuUserIsReady(user, botClient, update, cancellationToken, chatId);
                     break;
                 case "Профиль":
-                    StringBuilder builder = new StringBuilder();
-                    builder.AppendLine($"Ваш Id в системе: {user.Id}");
-                    builder.AppendLine($"Ваш рейтинг: {dbInteract.GetUserRating(user.Id)}");
-                    builder.AppendLine($"Количество оплаченных вопросов: {user.QuestionAmount}");
-                    await botClient.SendTextMessageAsync(chatId: chatId, text: builder.ToString(), cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
-                    user.SetPosition(dbInteract, DialogPosition.ProfileShown);
+                    await ProcessingUserMainMenuProfile(user, botClient, update, cancellationToken, chatId);
                     break;
                 default:
                     await botClient.SendTextMessageAsync(chatId: chatId, text: "Извините, я Вас не понял 🤖🤖🤖", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
@@ -192,44 +313,10 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             switch (update.Message.Text)
             {
                 case "Назад":
-                    await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
-                    user.SetPosition(dbInteract, DialogPosition.MainMenu);
+                    await ProcessingUserChooseWorkIdBack(user, botClient, update, cancellationToken, chatId);
                     break;
                 default:
-                    if (long.TryParse(update.Message.Text, out long result))
-                    {
-                        Answer? answer = dbInteract.GetAnswer(result);
-                        if (answer == null)
-                        {
-                            await botClient.SendTextMessageAsync(chatId: chatId, text: "Работа с таким Id не была найдена! 🤖🤖🤖\nВведите Id работы, которую хотите посмотреть:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
-                        }
-                        else
-                        {
-                            await botClient.SendTextMessageAsync(chatId: chatId, text: $"Работа #{answer.Id}", cancellationToken: cancellationToken);
-                            await botClient.SendTextMessageAsync(chatId: chatId, text: $"Тема: {answer.Question.Theme.Name}", cancellationToken: cancellationToken);
-                            await botClient.SendTextMessageAsync(chatId: chatId, text: $"Вопрос: {answer.Question.Text}", cancellationToken: cancellationToken);
-                            if (answer.Rate == null)
-                            {
-                                await botClient.SendTextMessageAsync(chatId: chatId, text: $"Работа проверена: Нет", cancellationToken: cancellationToken);
-                            }
-                            else
-                            {
-                                await botClient.SendTextMessageAsync(chatId: chatId, text: $"Работа проверена: Да", cancellationToken: cancellationToken);
-                            }
-                            await botClient.SendTextMessageAsync(chatId: chatId, text: $"Текст работы:\n{answer.Text}", cancellationToken: cancellationToken);
-                            if (answer.Rate != null)
-                            {
-                                await botClient.SendTextMessageAsync(chatId: chatId, text: $"Оценка эксперта: {answer.Rate}/10", cancellationToken: cancellationToken);
-                                await botClient.SendTextMessageAsync(chatId: chatId, text: $"Комментарий эксперта:\n{answer.Comment}", cancellationToken: cancellationToken);
-                            }
-                            await botClient.SendTextMessageAsync(chatId: chatId, text: $"Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.WorkShownButtons);
-                            user.SetPosition(dbInteract, DialogPosition.WorkShown);
-                        }
-                    }
-                    else
-                    {
-                        await botClient.SendTextMessageAsync(chatId: chatId, text: "Кажется Вы ввели что-то неправильно 🤖🤖🤖\nВведите Id работы, которую хотите посмотреть:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
-                    }
+                    await ProcessingUserChooseWorkIdIsNotFound(user, botClient, update, cancellationToken, chatId);
                     break;
             }
             break;
@@ -237,27 +324,10 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             switch (update.Message.Text)
             {
                 case "Назад к моим работам":
-                    StringBuilder worksBuilder = new StringBuilder("Список ваших работ:\n");
-                    List<Answer> answersOfUser = dbInteract.GetAnswersOfUser(chatId);
-                    foreach (Answer work in answersOfUser)
-                    {
-                        if (work.Question.Type == QuestionType.GeneralQuestion)
-                        {
-                            string checkedString = work.Rate == null ? "Не проверен" : "Проверен";
-                            worksBuilder.AppendLine($"{work.Id}) {work.Question.Text} - {checkedString}");
-                        }
-                        else
-                        {
-                            worksBuilder.AppendLine($"{work.Id}) Перевод текста");
-                        }
-                    }
-                    await botClient.SendTextMessageAsync(chatId: chatId, text: worksBuilder.ToString(), cancellationToken: cancellationToken, replyMarkup: null);
-                    await botClient.SendTextMessageAsync(chatId: chatId, text: "Введите Id работы, которую хотите посмотреть:", cancellationToken: cancellationToken, replyMarkup: null);
-                    user.SetPosition(dbInteract, DialogPosition.ChooseWorkId);
+                    await ProcessingUserBackToUserWork(user, botClient, update, cancellationToken, chatId);
                     break;
                 case "Назад в главное меню":
-                    await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
-                    user.SetPosition(dbInteract, DialogPosition.MainMenu);
+                    await ProcessingUserBackToMainMenuWork(user, botClient, update, cancellationToken, chatId);
                     break;
                 default:
                     await botClient.SendTextMessageAsync(chatId: chatId, text: "Извините, я Вас не понял 🤖🤖🤖\nВыберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
@@ -265,41 +335,10 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             }
             break;
         case DialogPosition.ShopAmount:
-            List<LabeledPrice> myList = new List<LabeledPrice>();
-            switch (update.Message.Text)
-            {
-                case "10":
-                    myList.Add(new LabeledPrice("Цена", 50000));
-                    await botClient.SendInvoiceAsync(chatId: chatId, title: "Покупка вопросов", description: "10 вопросов", payload: $"{chatId}-10", providerToken: "381764678:TEST:35685", currency: "RUB", myList);
-                    break;
-                case "50":
-                    myList.Add(new LabeledPrice("Цена", 230000));
-                    await botClient.SendInvoiceAsync(chatId: chatId, title: "Покупка вопросов", description: "50 вопросов", payload: $"{chatId}-50", providerToken: "381764678:TEST:35685", currency: "RUB", myList);
-                    break;
-                case "100":
-                    myList.Add(new LabeledPrice("Цена", 450000));
-                    await botClient.SendInvoiceAsync(chatId: chatId, title: "Покупка вопросов", description: "100 вопросов", payload: $"{chatId}-100", providerToken: "381764678:TEST:35685", currency: "RUB", myList);
-                    break;
-                case "Назад":
-                    await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
-                    user.SetPosition(dbInteract, DialogPosition.MainMenu);
-                    break;
-                default:
-                    await botClient.SendTextMessageAsync(chatId: chatId, text: "Извините, я Вас не понял 🤖🤖🤖\nВыберите кол - во вопросов которое хотите купить:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ShopButtons);
-                    break;
-            }
+            await ProcessingUserShopAmount(user, botClient, update, cancellationToken, chatId);
             break;
         case DialogPosition.ProfileShown:
-            switch (update.Message.Text)
-            {
-                case "Назад":
-                    await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
-                    user.SetPosition(dbInteract, DialogPosition.MainMenu);
-                    break;
-                default:
-                    await botClient.SendTextMessageAsync(chatId: chatId, text: "Извините, я Вас не понял 🤖🤖🤖", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
-                    break;
-            }
+            await ProcessingUserProfileShown(user, botClient, update, cancellationToken, chatId);
             break;
         case DialogPosition.TeacherMainMenu:
             IReplyMarkup teacherMainMenuButtons = ButtonBank.TeacherMainMenuButtonsWithWithdrawalOfFunds;
