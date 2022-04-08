@@ -12,8 +12,8 @@ using System.Timers;
 #region BaseLoading
 DataBaseInteractions dbInteract = new DataBaseInteractions("Server=wpl36.hosting.reg.ru;Database=u1615366_LingvoHack;User Id=u1615366_LingvoHack;Password=y21e&B4a;charset=utf8;");
 List<AwaitingAsnwer> awaitingAsnwers = new List<AwaitingAsnwer>();
-List<TelegramLingvoBot.User> Users = dbInteract.GetAllUsers();
-List<TelegramLingvoBot.Teacher> Teachers = dbInteract.GetAllTeachers();
+List<TelegramLingvoBot.User> Users = await dbInteract.GetAllUsers();
+List<TelegramLingvoBot.Teacher> Teachers = await dbInteract.GetAllTeachers();
 System.Timers.Timer mainTimer;
 #endregion
 

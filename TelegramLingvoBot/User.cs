@@ -38,10 +38,10 @@
         /// Уменьшает количетсво оплаченных вопросов пользователя на 1
         /// </summary>
         /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
-        public void DecrementQuestion(DataBaseInteractions dbInteract)
+        public async Task DecrementQuestion(DataBaseInteractions dbInteract)
         {
             QuestionAmount--;
-            dbInteract.UpdateUser(this);
+            await dbInteract.UpdateUser(this);
         }
 
         /// <summary>
@@ -49,10 +49,10 @@
         /// </summary>
         /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
         /// <param name="amount">Количество, которое надо добавить</param>
-        public void AddQuestions(DataBaseInteractions dbInteract, byte amount)
+        public async Task AddQuestions(DataBaseInteractions dbInteract, byte amount)
         {
             QuestionAmount += amount;
-            dbInteract.UpdateUser(this);
+            await dbInteract.UpdateUser(this);
         }
 
         /// <summary>
@@ -60,10 +60,10 @@
         /// </summary>
         /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
         /// <param name="users">Список пользователей, к которым надо применить</param>
-        public static void ResetReadyAllUsers(DataBaseInteractions dbInteract, List<User> users)
+        public static async Task ResetReadyAllUsers(DataBaseInteractions dbInteract, List<User> users)
         {
             users.ForEach(u => u.QuestionReady = true);
-            dbInteract.SetAllUsersReady();
+            await dbInteract.SetAllUsersReady();
         }
 
         /// <summary>
@@ -71,12 +71,12 @@
         /// </summary>
         /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
         /// <param name="ready">Новое значение</param>
-        public void SetReady(DataBaseInteractions dbInteract, bool ready)
+        public async Task SetReady(DataBaseInteractions dbInteract, bool ready)
         {
             if (QuestionReady != ready)
             {
                 QuestionReady = ready;
-                dbInteract.UpdateUser(this);
+                await dbInteract.UpdateUser(this);
             }
         }
 
@@ -85,12 +85,12 @@
         /// </summary>
         /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
         /// <param name="position">Новое положение пользователя</param>
-        public void SetPosition(DataBaseInteractions dbInteract, DialogPosition position)
+        public async Task SetPosition(DataBaseInteractions dbInteract, DialogPosition position)
         {
             if (Position != position)
             {
                 Position = position;
-                dbInteract.UpdateUser(this);
+                await dbInteract.UpdateUser(this);
             }
         }
     }
@@ -132,12 +132,12 @@
         /// </summary>
         /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
         /// <param name="money">Количетсво денег, которое платим</param>
-        public void AddBalance(DataBaseInteractions dbInteract, decimal money)
+        public async Task AddBalance(DataBaseInteractions dbInteract, decimal money)
         {
             if (money > 0)
             {
                 Balance += money;
-                dbInteract.UpdateTeacher(this);
+                await dbInteract.UpdateTeacher(this);
             }
         }
 
@@ -146,12 +146,12 @@
         /// </summary>
         /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
         /// <param name="position">Новая позиция</param>
-        public void SetPosition(DataBaseInteractions dbInteract, DialogPosition position)
+        public async Task SetPosition(DataBaseInteractions dbInteract, DialogPosition position)
         {
             if (Position != position)
             {
                 Position = position;
-                dbInteract.UpdateTeacher(this);
+                await dbInteract.UpdateTeacher(this);
             }
         }
     }

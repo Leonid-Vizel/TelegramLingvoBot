@@ -20,7 +20,7 @@
         /// <summary>
         /// Текст вопроса
         /// </summary>
-        public string Text { get; private set; }
+        public string Text { get; set; }
 
         /// <summary>
         /// Основной конструктор
