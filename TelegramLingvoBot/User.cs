@@ -195,6 +195,22 @@ namespace TelegramLingvoBot
         /// <summary>
         /// Ожидание ответа пользователя на вопрос
         /// </summary>
-        WaitingForResponce
+        WaitingForResponce,
+        /// <summary>
+        /// Меню профиля пользователя
+        /// </summary>
+        UserProfileMenu,
+        /// <summary>
+        /// Меню любимых тем пользователя
+        /// </summary>
+        UserThemesMenu,
+        /// <summary>
+        /// Меню любимых тем пользователя
+        /// </summary>
+        UserThemesDecrease,
+        /// <summary>
+        /// Меню добавления темы в 
+        /// </summary>
+        UserThemesIncrease
     }
 }

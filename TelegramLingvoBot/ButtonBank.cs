@@ -46,6 +46,67 @@ namespace TelegramLingvoBot
             }
         }
         /// <summary>
+        /// Меню профиля
+        /// </summary>
+        internal static IReplyMarkup UserProfileMenuButtons
+        {
+            get
+            {
+                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
+                    new List<List<KeyboardButton>>
+                    {
+                        new List<KeyboardButton>
+                        {
+                            new KeyboardButton("Редактировать любимые темы"),
+                            new KeyboardButton("Назад")
+                        }
+                    });
+                keyboard.ResizeKeyboard = true;
+                return keyboard;
+            }
+        }
+        /// <summary>
+        /// Меню любимых тем
+        /// </summary>
+        internal static IReplyMarkup UserThemesMenuButtons
+        {
+            get
+            {
+                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
+                    new List<List<KeyboardButton>>
+                    {
+                        new List<KeyboardButton>
+                        {
+                            new KeyboardButton("Добавить"),
+                            new KeyboardButton("Убрать"),
+                            new KeyboardButton("Назад")
+                        }
+                    });
+                keyboard.ResizeKeyboard = true;
+                return keyboard;
+            }
+        }
+        /// <summary>
+        /// Меню любимых тем
+        /// </summary>
+        internal static IReplyMarkup UserThemesMenuButtonsWithoutRemove
+        {
+            get
+            {
+                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
+                    new List<List<KeyboardButton>>
+                    {
+                        new List<KeyboardButton>
+                        {
+                            new KeyboardButton("Добавить"),
+                            new KeyboardButton("Назад")
+                        }
+                    });
+                keyboard.ResizeKeyboard = true;
+                return keyboard;
+            }
+        }
+        /// <summary>
         /// Кнопки Да/Нет
         /// </summary>
         internal static IReplyMarkup YesNoButtons

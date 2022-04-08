@@ -40,6 +40,7 @@ namespace TelegramLingvoBot
         /// <summary>
         /// Добавляет указанного пользователя в базу
         /// </summary>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         /// <param name="user">Объект пользователя, которого хотите добавить в базу</param>
         public async Task AddUser(User user, MySqlConnection? connectionInput = null)
         {
@@ -70,6 +71,7 @@ namespace TelegramLingvoBot
         /// <summary>
         /// Читает из базы всех пользователей
         /// </summary>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         /// <returns>Список пользователей, сохранённых в базе</returns>
         public async Task<List<User>> GetAllUsers(MySqlConnection? connectionInput = null)
         {
@@ -92,7 +94,7 @@ namespace TelegramLingvoBot
                                     users.Add(new User(
                                             reader.GetInt64(0),
                                             (DialogPosition)reader.GetInt32(2),
-                                            reader.GetInt32(1), true));
+                                            reader.GetInt32(1), reader.GetBoolean(3)));
                                 }
                             }
                         }
@@ -127,6 +129,7 @@ namespace TelegramLingvoBot
         /// <summary>
         /// Читает из базы всех учителей
         /// </summary>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         /// <returns>Список учителей, сохранённых в базе</returns>
         public async Task<List<Teacher>> GetAllTeachers(MySqlConnection? connectionInput = null)
         {
@@ -185,6 +188,7 @@ namespace TelegramLingvoBot
         /// Обновляет запись о пользователе в базе данных
         /// </summary>
         /// <param name="user">Данные для обновления</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         public async Task UpdateUser(User user, MySqlConnection? connectionInput = null)
         {
             if (connectionInput == null)
@@ -215,6 +219,7 @@ namespace TelegramLingvoBot
         /// Обновляет только данные о количетсве оплаченных вопросов пользователя
         /// </summary>
         /// <param name="user">Данные для обновления</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         public async Task UpdateUserQuestionAmount(User user, MySqlConnection? connectionInput = null)
         {
             if (connectionInput == null)
@@ -245,6 +250,7 @@ namespace TelegramLingvoBot
         /// Обновляет только данные о позиции пользователя
         /// </summary>
         /// <param name="user">Данные для обновления</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         public async Task UpdateUserDialogPosition(User user, MySqlConnection? connectionInput = null)
         {
             if (connectionInput == null)
@@ -275,6 +281,7 @@ namespace TelegramLingvoBot
         /// Обновляет только данные о готовность нового вопроса для пользователя
         /// </summary>
         /// <param name="user">Данные для обновления</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         public async Task UpdateUserQuestionReady(User user, MySqlConnection? connectionInput = null)
         {
             if (connectionInput == null)
@@ -305,6 +312,7 @@ namespace TelegramLingvoBot
         /// Обновляет запись об учителе в базе данных
         /// </summary>
         /// <param name="user">Данные для обновления</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         public async Task UpdateTeacher(Teacher teacher, MySqlConnection? connectionInput = null)
         {
             if (connectionInput == null)
@@ -335,6 +343,7 @@ namespace TelegramLingvoBot
         /// Считывает из базы сначала количетство вопросов впринципе, потом количетсво вопросов, которое пользователь уже решил
         /// </summary>
         /// <param name="userId">Идентиикатор пользователя для поиска в БД</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         /// <returns>Количество доступных пользователю вопросов из БД</returns>
         public async Task<long> GetUserAvailibleQuestionsAmount(long userId, MySqlConnection? connectionInput = null)
         {
@@ -384,6 +393,7 @@ namespace TelegramLingvoBot
         /// Считывает количество ответов, которое было проверено учителем
         /// </summary>
         /// <param name="teacherId">Идентификатор учителя для посика в БД</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         /// <returns>Количество ответов, которое было проверено учителем </returns>
         public async Task<long> GetCountOfVerifiedAnswersOfTeacher(long teacherId, MySqlConnection? connectionInput = null)
         {
@@ -420,6 +430,7 @@ namespace TelegramLingvoBot
         /// Считывает все ответы, пользователя.
         /// </summary>
         /// <param name="userId">Индентификатор пользователя для поиска в БД</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         /// <returns>Список всех ответов пользователя</returns>
         public async Task<List<Answer>> GetAnswersOfUser(long userId, MySqlConnection? connectionInput = null)
         {
@@ -567,6 +578,7 @@ namespace TelegramLingvoBot
         /// Добавляет инфорамцию об ответе пользователя в БД
         /// </summary>
         /// <param name="answer">Ответ для добавления в БД</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         public async Task AddAnswer(Answer answer, MySqlConnection? connectionInput = null)
         {
             if (connectionInput == null)
@@ -597,6 +609,7 @@ namespace TelegramLingvoBot
         /// Обновляет информацию об ответе пользователя
         /// </summary>
         /// <param name="work">Объект ответа пользователя для обновления данных</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         public async Task UpdateAnswer(Answer work, MySqlConnection? connectionInput = null)
         {
             if (connectionInput == null)
@@ -626,6 +639,7 @@ namespace TelegramLingvoBot
         /// <summary>
         /// Получет первый попавшийся непроверенный ответ
         /// </summary>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         /// <returns>Первый попавшийся непроверенный ответ или null, если его нет</returns>
         public async Task<Answer?> GetFirstAnswer(MySqlConnection? connectionInput = null)
         {
@@ -763,6 +777,7 @@ namespace TelegramLingvoBot
         /// Сичтывает информацию об ответе пользователя по идентификатору
         /// </summary>
         /// <param name="answerId">Индентификатор ответа для поиска</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         /// <returns>Объект ответа или null, если ответа с таким идентификатором не существует</returns>
         public async Task<Answer?> GetAnswer(long answerId, MySqlConnection? connectionInput = null)
         {
@@ -904,6 +919,7 @@ namespace TelegramLingvoBot
         /// Находит рейтинг пользователя, основвываясь на его ответах
         /// </summary>
         /// <param name="userId">Идентификатор пользователя</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         /// <returns>Рейтинг пользователя</returns>
         public async Task<decimal> GetUserRating(long userId, MySqlConnection? connectionInput = null)
         {
@@ -940,6 +956,7 @@ namespace TelegramLingvoBot
         /// Находит все вопросы из базы, которые имеют соответствующий тип
         /// </summary>
         /// <param name="type">Тип вопросов который ищем</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         /// <returns>Список вопросов соответствующего типа</returns>
         public async Task<List<Question>> GetQuestionsByType(QuestionType type, MySqlConnection? connectionInput = null)
         {
@@ -1024,6 +1041,7 @@ namespace TelegramLingvoBot
         /// </summary>
         /// <param name="userId">Идентификатор пользователя для поиска в БД</param>
         /// <param name="type">Тип вопроса для поиска в БД</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         /// <returns></returns>
         public async Task<List<int>> GetUserUsedQuestionIdsWithType(long userId, QuestionType type, MySqlConnection? connectionInput = null)
         {
@@ -1116,6 +1134,7 @@ namespace TelegramLingvoBot
         /// <summary>
         /// Даёт всем пользователям возможность ответить сегодня
         /// </summary>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         public async Task SetAllUsersReady(MySqlConnection? connectionInput = null)
         {
             if (connectionInput == null)
@@ -1143,6 +1162,7 @@ namespace TelegramLingvoBot
         /// <summary>
         /// Читает из базы все темы
         /// </summary>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         /// <returns>Список тем из базы</returns>
         public async Task<List<Theme>> GetAllThemes(MySqlConnection? connectionInput = null)
         {
@@ -1193,6 +1213,8 @@ namespace TelegramLingvoBot
         /// <summary>
         /// Читает все вопросы определённой темы
         /// </summary>
+        /// <param name="themeId">Идентификатор темы</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         /// <returns>Список вопросов из темы</returns>
         public async Task<List<Question>?> GetQuesionsFromTheme(int themeId, MySqlConnection? connectionInput = null)
         {
@@ -1277,7 +1299,8 @@ namespace TelegramLingvoBot
         /// Получает любимые темы пользователя
         /// </summary>
         /// <param name="userId"></param>
-        /// <returns></returns>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
+        /// <returns>Список любимых тем пользователя</returns>
         public async Task<List<Theme>> GetFavoriteThemesOfUser(long userId, MySqlConnection? connectionInput = null)
         {
             List<Theme> themes = new List<Theme>();
@@ -1289,7 +1312,7 @@ namespace TelegramLingvoBot
                     await SetUTF8Async(connection);
                     using (MySqlCommand command = connection.CreateCommand())
                     {
-                        command.CommandText = $"SELECT ThemeId FROM users_themes WHERE UserId = {userId};";
+                        command.CommandText = $"SELECT DISTINCT(ThemeId) FROM users_themes WHERE UserId = {userId};";
                         using (DbDataReader reader = await command.ExecuteReaderAsync())
                         {
                             if (reader.HasRows)
@@ -1352,6 +1375,155 @@ namespace TelegramLingvoBot
                 }
             }
             return themes;
+        }
+
+        /// <summary>
+        /// Считывает количество любимых тем пользователя
+        /// </summary>
+        /// <param name="userId">Идентификатор пользователя</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
+        /// <returns>Количество любимых тем пользователя</returns>
+        public async Task<long> GetCountOfFavoriteThemes(long userId, MySqlConnection? connectionInput = null)
+        {
+            object? result;
+            long amount;
+            if (connectionInput == null)
+            {
+                using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    using (MySqlCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = $"SELECT DISTINCT(ThemeId) FROM users_themes WHERE UserId = {userId};";
+                        result = await command.ExecuteScalarAsync();
+                        amount = (result == null || result == DBNull.Value) ? 0 : (long)result;
+                    }
+                }
+            }
+            else
+            {
+                using (MySqlCommand command = connectionInput.CreateCommand())
+                {
+                    command.CommandText = $"SELECT ThemeId FROM users_themes WHERE UserId = {userId};";
+                    result = await command.ExecuteScalarAsync();
+                    amount = (result == null || result == DBNull.Value) ? 0 : (long)result;
+                }
+            }
+            return amount;
+        }
+
+        /// <summary>
+        /// Удаление любимой темы у пользователя
+        /// </summary>
+        /// <param name="userId">Идентификатор пользователя</param>
+        /// <param name="themeId">Идентификатор темы</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
+        public async Task RemoveFavoriteTheme(long userId, int themeId, MySqlConnection? connectionInput = null)
+        {
+            if (connectionInput == null)
+            {
+                using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    using (MySqlCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = $"DELETE FROM users_themes WHERE UserId = {userId} AND ThemeId = {themeId};";
+                        await command.ExecuteNonQueryAsync();
+                    }
+                }
+            }
+            else
+            {
+                using (MySqlCommand command = connectionInput.CreateCommand())
+                {
+                    command.CommandText = $"DELETE FROM users_themes WHERE UserId = {userId} AND ThemeId = {themeId};";
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Добавление новой любимой темы пользователю
+        /// </summary>
+        /// <param name="userId">Идентификатор пользователя</param>
+        /// <param name="themeId">Идентификатор темы</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
+        public async Task AddFavoriteTheme(long userId, int themeId, MySqlConnection? connectionInput = null)
+        {
+            if (connectionInput == null)
+            {
+                using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    using (MySqlCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = $"INSERT INTO users_themes(UserId,ThemeId) VALUES({userId},{themeId});";
+                        await command.ExecuteNonQueryAsync();
+                    }
+                }
+            }
+            else
+            {
+                using (MySqlCommand command = connectionInput.CreateCommand())
+                {
+                    command.CommandText = $"INSERT INTO users_themes(UserId,ThemeId) VALUES({userId},{themeId});";
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Читает из базы тему по её идентификатору
+        /// </summary>
+        /// <param name="themeId">Идентификатор темы</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
+        /// <returns>Тема или null, если найти не удалось</returns>
+        public async Task<Theme?> GetTheme(int themeId, MySqlConnection? connectionInput = null)
+        {
+            Theme? theme;
+            if (connectionInput == null)
+            {
+                using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    using (MySqlCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = $"SELECT Id,Text FROM themes WHERE Id = {themeId};";
+                        using (MySqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                await reader.ReadAsync();
+                                theme = new Theme(reader.GetInt32(0), reader.GetTextReader(1).ReadToEnd());
+                            }
+                            else
+                            {
+                                theme = null;
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                using (MySqlCommand command = connectionInput.CreateCommand())
+                {
+                    command.CommandText = $"SELECT Id,Text FROM themes WHERE Id = {themeId};";
+                    using (MySqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            await reader.ReadAsync();
+                            theme = new Theme(reader.GetInt32(0), reader.GetTextReader(1).ReadToEnd());
+                        }
+                        else
+                        {
+                            theme = null;
+                        }
+                    }
+                }
+            }
+            return theme;
         }
     }
 }
