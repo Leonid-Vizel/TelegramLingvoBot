@@ -1,4 +1,6 @@
-﻿namespace TelegramLingvoBot
+﻿using MySql.Data.MySqlClient;
+
+namespace TelegramLingvoBot
 {
     internal class User
     {
@@ -38,10 +40,10 @@
         /// Уменьшает количетсво оплаченных вопросов пользователя на 1
         /// </summary>
         /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
-        public async Task DecrementQuestion(DataBaseInteractions dbInteract)
+        public async Task DecrementQuestion(DataBaseInteractions dbInteract, MySqlConnection? connectionInput = null)
         {
             QuestionAmount--;
-            await dbInteract.UpdateUser(this);
+            await dbInteract.UpdateUserQuestionAmount(this, connectionInput);
         }
 
         /// <summary>
@@ -49,10 +51,10 @@
         /// </summary>
         /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
         /// <param name="amount">Количество, которое надо добавить</param>
-        public async Task AddQuestions(DataBaseInteractions dbInteract, byte amount)
+        public async Task AddQuestions(DataBaseInteractions dbInteract, byte amount, MySqlConnection? connectionInput = null)
         {
             QuestionAmount += amount;
-            await dbInteract.UpdateUser(this);
+            await dbInteract.UpdateUserQuestionAmount(this, connectionInput);
         }
 
         /// <summary>
@@ -60,10 +62,10 @@
         /// </summary>
         /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
         /// <param name="users">Список пользователей, к которым надо применить</param>
-        public static async Task ResetReadyAllUsers(DataBaseInteractions dbInteract, List<User> users)
+        public static async Task ResetReadyAllUsers(DataBaseInteractions dbInteract, List<User> users, MySqlConnection? connectionInput = null)
         {
             users.ForEach(u => u.QuestionReady = true);
-            await dbInteract.SetAllUsersReady();
+            await dbInteract.SetAllUsersReady(connectionInput);
         }
 
         /// <summary>
@@ -71,12 +73,12 @@
         /// </summary>
         /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
         /// <param name="ready">Новое значение</param>
-        public async Task SetReady(DataBaseInteractions dbInteract, bool ready)
+        public async Task SetReady(DataBaseInteractions dbInteract, bool ready, MySqlConnection? connectionInput = null)
         {
             if (QuestionReady != ready)
             {
                 QuestionReady = ready;
-                await dbInteract.UpdateUser(this);
+                await dbInteract.UpdateUser(this, connectionInput);
             }
         }
 
@@ -85,12 +87,12 @@
         /// </summary>
         /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
         /// <param name="position">Новое положение пользователя</param>
-        public async Task SetPosition(DataBaseInteractions dbInteract, DialogPosition position)
+        public async Task SetPosition(DataBaseInteractions dbInteract, DialogPosition position, MySqlConnection? connectionInput = null)
         {
             if (Position != position)
             {
                 Position = position;
-                await dbInteract.UpdateUser(this);
+                await dbInteract.UpdateUser(this, connectionInput);
             }
         }
     }
@@ -132,12 +134,12 @@
         /// </summary>
         /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
         /// <param name="money">Количетсво денег, которое платим</param>
-        public async Task AddBalance(DataBaseInteractions dbInteract, decimal money)
+        public async Task AddBalance(DataBaseInteractions dbInteract, decimal money, MySqlConnection? connectionInput = null)
         {
             if (money > 0)
             {
                 Balance += money;
-                await dbInteract.UpdateTeacher(this);
+                await dbInteract.UpdateTeacher(this, connectionInput);
             }
         }
 
@@ -146,12 +148,12 @@
         /// </summary>
         /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
         /// <param name="position">Новая позиция</param>
-        public async Task SetPosition(DataBaseInteractions dbInteract, DialogPosition position)
+        public async Task SetPosition(DataBaseInteractions dbInteract, DialogPosition position, MySqlConnection? connectionInput = null)
         {
             if (Position != position)
             {
                 Position = position;
-                await dbInteract.UpdateTeacher(this);
+                await dbInteract.UpdateTeacher(this, connectionInput);
             }
         }
     }

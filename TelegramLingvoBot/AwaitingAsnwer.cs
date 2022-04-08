@@ -49,7 +49,7 @@ namespace TelegramLingvoBot
             timer.Dispose();
             await BotClient.SendTextMessageAsync(chatId: User.Id, text: "К сожалению, Вы не успели уложится во время. Попробовать снова мы можете нажав на кнопку 'Я готов'", cancellationToken: Token, replyMarkup: ButtonBank.UserMainMenuButtons);
             ListStorage.Remove(this);
-            User.SetPosition(dbInteract, DialogPosition.MainMenu);
+            await User.SetPosition(dbInteract, DialogPosition.MainMenu);
         }
 
         public void StopDestroy()
