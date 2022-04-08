@@ -136,6 +136,60 @@ namespace TelegramLingvoBot
         }
 
         /// <summary>
+        /// Обновляет только данные о количетсве оплаченных вопросов пользователя
+        /// </summary>
+        /// <param name="user">Данные для обновления</param>
+        public async Task UpdateUserQuestionAmount(User user)
+        {
+            using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+            {
+                await connection.OpenAsync();
+                await SetUTF8Async(connection);
+                using (MySqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = $"UPDATE users SET QuestionAmount = {user.QuestionAmount} WHERE id={user.Id}";
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Обновляет только данные о позиции пользователя
+        /// </summary>
+        /// <param name="user">Данные для обновления</param>
+        public async Task UpdateUserDialogPosition(User user)
+        {
+            using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+            {
+                await connection.OpenAsync();
+                await SetUTF8Async(connection);
+                using (MySqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = $"UPDATE users SET DialogPosition = {(int)user.Position} WHERE id={user.Id}";
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Обновляет только данные о готовность нового вопроса для пользователя
+        /// </summary>
+        /// <param name="user">Данные для обновления</param>
+        public async Task UpdateUserQuestionReady(User user)
+        {
+            using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+            {
+                await connection.OpenAsync();
+                await SetUTF8Async(connection);
+                using (MySqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = $"UPDATE users SET QuestionReady = {Convert.ToInt32(user.QuestionReady)} WHERE id={user.Id}";
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
+        /// <summary>
         /// Обновляет запись об учителе в базе данных
         /// </summary>
         /// <param name="user">Данные для обновления</param>
@@ -603,6 +657,123 @@ namespace TelegramLingvoBot
                     await command.ExecuteNonQueryAsync();
                 }
             }
+        }
+
+        /// <summary>
+        /// Читает из базы все темы
+        /// </summary>
+        /// <returns>Список тем из базы</returns>
+        public async Task<List<Theme>> GetAllThemes()
+        {
+            List<Theme> themes = new List<Theme>();
+            using (MySqlConnection conection = new MySqlConnection())
+            {
+                await conection.OpenAsync();
+                using (MySqlCommand command = conection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * FROM themes;";
+                    using (DbDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        if (reader.HasRows)
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                themes.Add(new Theme(reader.GetInt32(0),reader.GetTextReader(1).ReadToEnd()));
+                            }
+                        }
+                    }
+                }
+            }
+            return themes;
+        }
+
+        /// <summary>
+        /// Читает все вопросы определённой темы
+        /// </summary>
+        /// <returns>Список вопросов из темы</returns>
+        public async Task<List<Question>?> GetQuesionsFromTheme(int themeId)
+        {
+            List<Question> questions = new List<Question>();
+            using (MySqlConnection conection = new MySqlConnection())
+            {
+                await conection.OpenAsync();
+                Theme theme = null;
+                using (MySqlCommand command = conection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT Text FROM themes WHERE Id = {themeId};";
+                    using (DbDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        if (reader.HasRows)
+                        {
+                            await reader.ReadAsync();
+                            theme = new Theme(themeId, reader.GetTextReader(0).ReadToEnd());
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                }
+                using (MySqlCommand command = conection.CreateCommand())
+                {
+                    command.CommandText = "SELECT Id,QuestionType,Text FROM questions;";
+                    using (DbDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        if (reader.HasRows)
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                questions.Add(new Question(reader.GetInt32(0), theme, (QuestionType)reader.GetInt32(2), reader.GetTextReader(3).ReadToEnd()));
+                            }
+                        }
+                    }
+                }
+            }
+            return questions;
+        }
+
+        /// <summary>
+        /// Получает любимые темы пользователя
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        public async Task<List<Theme>> GetFavoriteThemesOfUser(long userId)
+        {
+            List<Theme> themes = new List<Theme>();
+            using (MySqlConnection conection = new MySqlConnection())
+            {
+                await conection.OpenAsync();
+                using (MySqlCommand command = conection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT ThemeId FROM users_themes WHERE UserId = {userId};";
+                    using (DbDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        if (reader.HasRows)
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                themes.Add(new Theme(reader.GetInt32(0)));
+                            }
+                        }
+                    }
+                }
+                foreach(Theme theme in themes)
+                {
+                    using (MySqlCommand command = conection.CreateCommand())
+                    {
+                        command.CommandText = $"SELECT Text FROM themes WHERE Id = {theme.Id};";
+                        using (DbDataReader reader = await command.ExecuteReaderAsync())
+                        {
+                            if (reader.HasRows)
+                            {
+                                await reader.ReadAsync();
+                                theme.Name = reader.GetTextReader(0).ReadToEnd();
+                            }
+                        }
+                    }
+                }
+            }
+            return themes;
         }
     }
 }
