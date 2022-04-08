@@ -411,6 +411,27 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             }
         }
     }
+    if (update.Message.Text.Equals("/start"))
+    {
+        if (user != null)
+        {
+            await user.SetPosition(dbInteract, DialogPosition.MainMenu);
+            await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+        }
+        else
+        {
+            await teacher.SetPosition(dbInteract, DialogPosition.TeacherMainMenu);
+            if (teacher.Balance < 100)
+            {
+                await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.TeacherMainMenuButtonsWithoutWithdrawalOfFunds);
+            }
+            else
+            {
+                await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.TeacherMainMenuButtonsWithWithdrawalOfFunds);
+            }
+        }
+        return;
+    }
 
     DialogPosition dialogPosition;
     if (user != null)
