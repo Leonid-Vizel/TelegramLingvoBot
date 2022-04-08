@@ -170,25 +170,23 @@ async Task ProcessingUserChooseWorkIdIsNotFound(TelegramLingvoBot.User? user, IT
         }
         else
         {
-            await botClient.SendTextMessageAsync(chatId: chatId, text: $"Работа #{answer.Id}", cancellationToken: cancellationToken);
-            await botClient.SendTextMessageAsync(chatId: chatId, text: $"Тема: {answer.Question.Theme.Name}", cancellationToken: cancellationToken);
-            await botClient.SendTextMessageAsync(chatId: chatId, text: $"Вопрос: {answer.Question.Text}", cancellationToken: cancellationToken);
+            StringBuilder builder = new StringBuilder($"Работа #{answer.Id}\nТема: {answer.Question.Theme.Name}\nВопрос: {answer.Question.Text}\n");
             if (answer.Rate == null)
             {
-                await botClient.SendTextMessageAsync(chatId: chatId, text: $"Работа проверена: Нет", cancellationToken: cancellationToken);
+                builder.AppendLine("Работа проверена: Нет");
             }
             else
             {
-                await botClient.SendTextMessageAsync(chatId: chatId, text: $"Работа проверена: Да", cancellationToken: cancellationToken);
+                builder.AppendLine("Работа проверена: Да");
             }
-            await botClient.SendTextMessageAsync(chatId: chatId, text: $"Текст работы:\n{answer.Text}", cancellationToken: cancellationToken);
+            builder.AppendLine($"Текст работы:\n{answer.Text}");
             if (answer.Rate != null)
             {
-                await botClient.SendTextMessageAsync(chatId: chatId, text: $"Оценка эксперта: {answer.Rate}/10", cancellationToken: cancellationToken);
-                await botClient.SendTextMessageAsync(chatId: chatId, text: $"Комментарий эксперта:\n{answer.Comment}", cancellationToken: cancellationToken);
+                builder.AppendLine($"Оценка эксперта: {answer.Rate}/10\nКомментарий эксперта:\n{answer.Comment}");
             }
-            await botClient.SendTextMessageAsync(chatId: chatId, text: $"Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.WorkShownButtons);
+            await botClient.SendTextMessageAsync(chatId: chatId, text: builder.ToString(), cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
             await user.SetPosition(dbInteract, DialogPosition.WorkShown);
+            await botClient.SendTextMessageAsync(chatId: chatId, text: $"Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.WorkShownButtons);
         }
     }
     else
