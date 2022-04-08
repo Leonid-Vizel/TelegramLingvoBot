@@ -9,13 +9,24 @@ namespace TelegramLingvoBot
 {
     internal class DataBaseInteractions
     {
+        /// <summary>
+        /// Строка подключения к баззе данных, которая будет использвана в последующих запросах через этот объект
+        /// </summary>
         public string ConnectionString { get; private set; }
 
+        /// <summary>
+        /// Конструктор класса
+        /// </summary>
+        /// <param name="connectionString">Строка подключения к баззе данных, которая будет использвана в последующих запросах через этот объект</param>
         public DataBaseInteractions(string connectionString)
         {
             ConnectionString = connectionString;
         }
 
+        /// <summary>
+        /// Устанавливет кодировку UTF-8 для подключения
+        /// </summary>
+        /// <param name="connection">Подключение, для которого будет выполнен запрос</param>
         private void SetUTF8(MySqlConnection connection)
         {
             using (MySqlCommand command = connection.CreateCommand())
@@ -25,6 +36,10 @@ namespace TelegramLingvoBot
             }
         }
 
+        /// <summary>
+        /// Добавляет указанного пользователя в базу
+        /// </summary>
+        /// <param name="user">Объект пользователя, которого хотите добавить в базу</param>
         public void AddUser(User user)
         {
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
@@ -33,12 +48,16 @@ namespace TelegramLingvoBot
                 SetUTF8(connection);
                 using (MySqlCommand command = connection.CreateCommand())
                 {
-                    command.CommandText = $"INSERT INTO users(id, QuestionAmount, DialogPosition) VALUES({ user.Id}, {user.QuestionAmount}, {(int)user.Position});";
+                    command.CommandText = $"INSERT INTO users(id, QuestionAmount, DialogPosition, QueestionReady) VALUES({ user.Id}, {user.QuestionAmount}, {(int)user.Position}, {Convert.ToInt32(user.QuestionReady)});";
                     command.ExecuteNonQuery();
                 }
             }
         }
 
+        /// <summary>
+        /// Читает из базы всех пользователей
+        /// </summary>
+        /// <returns>Список пользователей, сохранённых в базе</returns>
         public List<User> GetAllUsers()
         {
             List<User> users = new List<User>();
@@ -67,6 +86,10 @@ namespace TelegramLingvoBot
             return users;
         }
 
+        /// <summary>
+        /// Читает из базы всех учителей
+        /// </summary>
+        /// <returns>Список учителей, сохранённых в базе</returns>
         public List<Teacher> GetAllTeachers()
         {
             List<Teacher> users = new List<Teacher>();
@@ -95,6 +118,10 @@ namespace TelegramLingvoBot
             return users;
         }
 
+        /// <summary>
+        /// Обновляет запись о пользователе в базе данных
+        /// </summary>
+        /// <param name="user">Данные для обновления</param>
         public void UpdateUser(User user)
         {
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
@@ -109,6 +136,10 @@ namespace TelegramLingvoBot
             }
         }
 
+        /// <summary>
+        /// Обновляет запись об учителе в базе данных
+        /// </summary>
+        /// <param name="user">Данные для обновления</param>
         public void UpdateTeacher(Teacher teacher)
         {
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
@@ -123,6 +154,11 @@ namespace TelegramLingvoBot
             }
         }
 
+        /// <summary>
+        /// Считывает из базы сначала количетство вопросов впринципе, потом количетсво вопросов, которое пользователь уже решил
+        /// </summary>
+        /// <param name="userId">Идентиикатор пользователя для поиска в БД</param>
+        /// <returns>Количество доступных пользователю вопросов из БД</returns>
         public long GetUserAvailibleQuestionsAmount(long userId)
         {
             long total = 0;
@@ -140,7 +176,7 @@ namespace TelegramLingvoBot
                 }
                 using (MySqlCommand command = connection.CreateCommand())
                 {
-                    command.CommandText = $"SELECT COUNT(*) FROM answers WHERE UserId = {userId};";
+                    command.CommandText = $"SELECT COUNT(DISTINCT(QuestionId)) FROM answers WHERE UserId = {userId};";
                     result = command.ExecuteScalar();
                     used = result == DBNull.Value ? 0 : (long)result;
                 }
@@ -148,6 +184,11 @@ namespace TelegramLingvoBot
             return total - used;
         }
 
+        /// <summary>
+        /// Считывает количество ответов, которое было проверено учителем
+        /// </summary>
+        /// <param name="teacherId">Идентификатор учителя для посика в БД</param>
+        /// <returns>Количество ответов, которое было проверено учителем </returns>
         public long GetCountOfVerifiedAnswersOfTeacher(long teacherId)
         {
             long countOfVerifiedAnswers = 0;
@@ -166,6 +207,11 @@ namespace TelegramLingvoBot
             return countOfVerifiedAnswers;
         }
 
+        /// <summary>
+        /// Считывает все ответы, пользователя.
+        /// </summary>
+        /// <param name="userId">Индентификатор пользователя для поиска в БД</param>
+        /// <returns>Список всех ответов пользователя</returns>
         public List<Answer> GetAnswersOfUser(long userId)
         {
             List<Answer> answers = new List<Answer>();
@@ -240,6 +286,10 @@ namespace TelegramLingvoBot
             return answers;
         }
 
+        /// <summary>
+        /// Добавляет инфорамцию об ответе пользователя в БД
+        /// </summary>
+        /// <param name="answer">Ответ для добавления в БД</param>
         public void AddAnswer(Answer answer)
         {
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
@@ -254,6 +304,10 @@ namespace TelegramLingvoBot
             }
         }
 
+        /// <summary>
+        /// Обновляет информацию об ответе пользователя
+        /// </summary>
+        /// <param name="work">Объект ответа пользователя для обновления данных</param>
         public void UpdateAnswer(Answer work)
         {
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))
@@ -268,6 +322,10 @@ namespace TelegramLingvoBot
             }
         }
 
+        /// <summary>
+        /// Получет первый попавшийся непроверенный ответ
+        /// </summary>
+        /// <returns>Первый попавшийся непроверенный ответ или null, если его нет</returns>
         public Answer? GetFirstAnswer()
         {
             Answer? answer = null;
@@ -337,6 +395,11 @@ namespace TelegramLingvoBot
             return answer;
         }
 
+        /// <summary>
+        /// Сичтывает информацию об ответе пользователя по идентификатору
+        /// </summary>
+        /// <param name="answerId">Индентификатор ответа для поиска</param>
+        /// <returns>Объект ответа или null, если ответа с таким идентификатором не существует</returns>
         public Answer? GetAnswer(long answerId)
         {
             Answer? answer = null;
@@ -407,6 +470,11 @@ namespace TelegramLingvoBot
             return answer;
         }
 
+        /// <summary>
+        /// Находит рейтинг пользователя, основвываясь на его ответах
+        /// </summary>
+        /// <param name="userId">Идентификатор пользователя</param>
+        /// <returns>Рейтинг пользователя</returns>
         public decimal GetUserRating(long userId)
         {
             object returnObject;
@@ -425,6 +493,11 @@ namespace TelegramLingvoBot
             return rating;
         }
 
+        /// <summary>
+        /// Находит все вопросы из базы, которые имеют соответствующий тип
+        /// </summary>
+        /// <param name="type">Тип вопросов который ищем</param>
+        /// <returns>Список вопросов соответствующего типа</returns>
         public List<Question> GetQuestionsByType(QuestionType type)
         {
             List<Question> questions = new List<Question>();
@@ -467,6 +540,12 @@ namespace TelegramLingvoBot
             }
         }
 
+        /// <summary>
+        /// Находит идентификаторы всех вопросов
+        /// </summary>
+        /// <param name="userId">Идентификатор пользователя для поиска в БД</param>
+        /// <param name="type">Тип вопроса для поиска в БД</param>
+        /// <returns></returns>
         public List<int> GetUserUsedQuestionIdsWithType(long userId, QuestionType type)
         {
             List<int> returnList = new List<int>();
@@ -476,7 +555,7 @@ namespace TelegramLingvoBot
                 SetUTF8(connection);
                 using (MySqlCommand command = connection.CreateCommand())
                 {
-                    command.CommandText = $"SELECT QuestionId FROM answers WHERE UserId = {userId};";
+                    command.CommandText = $"SELECT DISTINCT QuestionId FROM answers WHERE UserId = {userId};";
                     using (MySqlDataReader reader = command.ExecuteReader())
                     {
                         if (reader.HasRows)
@@ -513,6 +592,9 @@ namespace TelegramLingvoBot
             return returnList;
         }
 
+        /// <summary>
+        /// Даёт всем пользователям возможность ответить сегодня
+        /// </summary>
         public void SetAllUsersReady()
         {
             using (MySqlConnection connection = new MySqlConnection(ConnectionString))

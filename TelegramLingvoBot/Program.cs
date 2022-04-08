@@ -100,6 +100,11 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
         return;
     }
 
+    if (update.Message == null || update.Message.Text == null)
+    {
+        return;
+    }
+
     long chatId = update.Message.Chat.Id;
     TelegramLingvoBot.User? user = Users.FirstOrDefault(x => x.Id == chatId);
     TelegramLingvoBot.Teacher? teacher = null;
@@ -127,7 +132,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
     {
         dialogPosition = user.Position;
     }
-    else
+    else 
     {
         dialogPosition = teacher.Position;
     }
