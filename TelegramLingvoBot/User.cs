@@ -1,18 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TelegramLingvoBot
+﻿namespace TelegramLingvoBot
 {
     internal class User
     {
+        /// <summary>
+        /// Идентификатор пользователя 
+        /// </summary>
         public long Id { get; private set; }
+        /// <summary>
+        /// Количетсво оплаченных пользователем вопросов (При создании акканута равно 1)
+        /// </summary>
         public int QuestionAmount { get; private set; }
+        /// <summary>
+        /// Позиция диалога
+        /// </summary>
         public DialogPosition Position { get; private set; }
+        /// <summary>
+        /// Обозначает, может ли сегодня пользователь решить вопрос
+        /// </summary>
         public bool QuestionReady { get; private set; }
 
+        /// <summary>
+        /// Основной конструктор класса
+        /// </summary>
+        /// <param name="id">Идентификатор пользователя (Чата с пользователем)</param>
+        /// <param name="position">Позиция диалога. По умолчанию - гланвое меню пользователя</param>
+        /// <param name="questionAmount">Количество оплаченных вопросов. По умолчанию - 1</param>
+        /// <param name="questionReady">Можно ли пользователю сегодня ответить. По умолчанию - Может(true)</param>
         public User(long id, DialogPosition position = DialogPosition.MainMenu, int questionAmount = 1, bool questionReady = true)
         {
             Id = id;
@@ -21,38 +34,92 @@ namespace TelegramLingvoBot
             QuestionReady = questionReady;
         }
 
-        public void DecrementQuestion(DataBaseInteractions dbInteract)
+        /// <summary>
+        /// Уменьшает количетсво оплаченных вопросов пользователя на 1
+        /// </summary>
+        /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
+        public async Task DecrementQuestion(DataBaseInteractions dbInteract)
         {
             QuestionAmount--;
-            dbInteract.UpdateUser(this);
+            await dbInteract.UpdateUser(this);
         }
-        public void AddQuestions(DataBaseInteractions dbInteract, byte amount)
+
+        /// <summary>
+        /// Увеличивает количество оплаченных вопросов
+        /// </summary>
+        /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
+        /// <param name="amount">Количество, которое надо добавить</param>
+        public async Task AddQuestions(DataBaseInteractions dbInteract, byte amount)
         {
             QuestionAmount += amount;
-            dbInteract.UpdateUser(this);
+            await dbInteract.UpdateUser(this);
         }
 
-
-        public void SetReady(DataBaseInteractions dbInteract, bool ready)
+        /// <summary>
+        /// Задаёт всем пользователям готовность к получению нового вопроса
+        /// </summary>
+        /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
+        /// <param name="users">Список пользователей, к которым надо применить</param>
+        public static async Task ResetReadyAllUsers(DataBaseInteractions dbInteract, List<User> users)
         {
-            QuestionReady = ready;
-            dbInteract.UpdateUser(this);
+            users.ForEach(u => u.QuestionReady = true);
+            await dbInteract.SetAllUsersReady();
         }
 
-        public void SetPosition(DataBaseInteractions dbInteract, DialogPosition position)
+        /// <summary>
+        /// Задаёт значение готовности ежедневного вопроса для пользователя
+        /// </summary>
+        /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
+        /// <param name="ready">Новое значение</param>
+        public async Task SetReady(DataBaseInteractions dbInteract, bool ready)
         {
-            Position = position;
-            dbInteract.UpdateUser(this);
+            if (QuestionReady != ready)
+            {
+                QuestionReady = ready;
+                await dbInteract.UpdateUser(this);
+            }
+        }
+
+        /// <summary>
+        /// Меняет положение пользователя в диалоге
+        /// </summary>
+        /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
+        /// <param name="position">Новое положение пользователя</param>
+        public async Task SetPosition(DataBaseInteractions dbInteract, DialogPosition position)
+        {
+            if (Position != position)
+            {
+                Position = position;
+                await dbInteract.UpdateUser(this);
+            }
         }
     }
 
     internal class Teacher
     {
+        /// <summary>
+        /// Идентификатор учителя (Чат с ним)
+        /// </summary>
         public long Id { get; private set; }
+        /// <summary>
+        /// Баланс учителя в рублях
+        /// </summary>
         public decimal Balance { get; private set; }
+        /// <summary>
+        /// Позиция дислога с учителем
+        /// </summary>
         public DialogPosition Position { get; private set; }
+        /// <summary>
+        /// Вопрос, который учитель проверяет в данный момент
+        /// </summary>
         public Answer? CurrentAnswer { get; set; }
 
+        /// <summary>
+        /// Основной конструктор класса
+        /// </summary>
+        /// <param name="id">Идентификатор учителя (Чата с ним)</param>
+        /// <param name="balance">Баланс в рублях</param>
+        /// <param name="position">Позиция диалога</param>
         public Teacher(long id, decimal balance, DialogPosition position)
         {
             Id = id;
@@ -60,30 +127,72 @@ namespace TelegramLingvoBot
             Position = position;
         }
 
-        public void AddBalance(DataBaseInteractions dbInteract, decimal money)
+        /// <summary>
+        /// Добавляет определённое количетсво рублей на баланс учителя
+        /// </summary>
+        /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
+        /// <param name="money">Количетсво денег, которое платим</param>
+        public async Task AddBalance(DataBaseInteractions dbInteract, decimal money)
         {
-            Balance += money;
-            dbInteract.UpdateTeacher(this);
+            if (money > 0)
+            {
+                Balance += money;
+                await dbInteract.UpdateTeacher(this);
+            }
         }
 
-        public void SetPosition(DataBaseInteractions dbInteract, DialogPosition position)
+        /// <summary>
+        /// Изменяет текущую позицию диалога учителя
+        /// </summary>
+        /// <param name="dbInteract">Объект взаимодейтсвия с базой</param>
+        /// <param name="position">Новая позиция</param>
+        public async Task SetPosition(DataBaseInteractions dbInteract, DialogPosition position)
         {
-            Position = position;
-            dbInteract.UpdateTeacher(this);
+            if (Position != position)
+            {
+                Position = position;
+                await dbInteract.UpdateTeacher(this);
+            }
         }
     }
 
     internal enum DialogPosition
     {
+        /// <summary>
+        /// Главное меню пользователя
+        /// </summary>
         MainMenu,
+        /// <summary>
+        /// Выбор работы пользователя
+        /// </summary>
         ChooseWorkId,
+        /// <summary>
+        /// Работа показана. Выбор пути назад
+        /// </summary>
         WorkShown,
+        /// <summary>
+        /// Выбор количетсва вопросов для покупки
+        /// </summary>
         ShopAmount,
-        ProfileShown,
+        /// <summary>
+        /// Главное меню учителя
+        /// </summary>
         TeacherMainMenu,
+        /// <summary>
+        /// Ввод учителем комментария к работе
+        /// </summary>
         TeacherWorkCheckComment,
+        /// <summary>
+        /// Ввод учителем оценки за работу
+        /// </summary>
         TeacherWorkCheckRate,
-        AnswerTypeSelect, 
+        /// <summary>
+        /// Выбор типа работы, перед отправкой
+        /// </summary>
+        AnswerTypeSelect,
+        /// <summary>
+        /// Ожидание ответа пользователя на вопрос
+        /// </summary>
         WaitingForResponce
     }
 }

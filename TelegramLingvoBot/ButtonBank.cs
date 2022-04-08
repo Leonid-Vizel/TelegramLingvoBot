@@ -4,6 +4,9 @@ namespace TelegramLingvoBot
 {
     internal static class ButtonBank
     {
+        /// <summary>
+        /// Кнопка регистрации пользоваетля
+        /// </summary>
         internal static IReplyMarkup RegisterButton
         {
             get
@@ -20,7 +23,9 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
-
+        /// <summary>
+        /// Главное меню пользователя
+        /// </summary>
         internal static IReplyMarkup UserMainMenuButtons
         {
             get
@@ -40,7 +45,9 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
-
+        /// <summary>
+        /// Кнопки Да/Нет
+        /// </summary>
         internal static IReplyMarkup YesNoButtons
         {
             get
@@ -58,7 +65,9 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
-
+        /// <summary>
+        /// Кнопка Назад
+        /// </summary>
         internal static IReplyMarkup JustBackButton
         {
             get
@@ -75,7 +84,9 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
-
+        /// <summary>
+        /// Кнопки с количествами вопросов для магазина
+        /// </summary>
         internal static IReplyMarkup ShopButtons
         {
             get
@@ -95,7 +106,9 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
-
+        /// <summary>
+        /// Кнопки после показа материалов работы
+        /// </summary>
         internal static IReplyMarkup WorkShownButtons
         {
             get
@@ -113,7 +126,9 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
-
+        /// <summary>
+        /// Выбор типа вопроса 
+        /// </summary>
         internal static IReplyMarkup AnswerTypeButtons
         {
             get
@@ -131,7 +146,9 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
-
+        /// <summary>
+        /// Кнопки главного меню учителя без кнопки вывода средств
+        /// </summary>
         internal static IReplyMarkup TeacherMainMenuButtonsWithoutWithdrawalOfFunds
         {
             get
@@ -149,7 +166,9 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
-
+        /// <summary>
+        /// Кнопки главного меню учителя с кнопкой вывода средств
+        /// </summary>
         internal static IReplyMarkup TeacherMainMenuButtonsWithWithdrawalOfFunds
         {
             get
@@ -168,6 +187,9 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+        /// <summary>
+        /// Кнопки для оценки работы пользователя (1-10)
+        /// </summary>
         internal static IReplyMarkup RateForAnswerButtons
         {
             get
@@ -193,19 +215,10 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
-      
+        /// <summary>
+        /// Убирает все кнопки
+        /// </summary>
         internal static IReplyMarkup EmptyButtons
-        {
-            get
-            {
-                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
-                    new List<List<KeyboardButton>>
-                    {
-                        new List<KeyboardButton>()
-                    });
-                keyboard.ResizeKeyboard = true;
-                return keyboard;
-            }
-        }
+            => new ReplyKeyboardRemove() { };
     }
 }
