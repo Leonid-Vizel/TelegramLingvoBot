@@ -146,6 +146,7 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+
         /// <summary>
         /// Кнопка Назад
         /// </summary>
@@ -165,6 +166,7 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+
         /// <summary>
         /// Кнопки с количествами вопросов для магазина
         /// </summary>
@@ -187,6 +189,7 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+
         /// <summary>
         /// Кнопки после показа материалов работы
         /// </summary>
@@ -201,27 +204,6 @@ namespace TelegramLingvoBot
                         {
                             new KeyboardButton("Назад к моим работам"),
                             new KeyboardButton("Назад в главное меню"),
-                        }
-                    });
-                keyboard.ResizeKeyboard = true;
-                return keyboard;
-            }
-        }
-        /// <summary>
-        /// Выбор типа вопроса 
-        /// </summary>
-        internal static IReplyMarkup AnswerTypeButtons
-        {
-            get
-            {
-                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
-                    new List<List<KeyboardButton>>
-                    {
-                        new List<KeyboardButton>
-                        {
-                            new KeyboardButton("Общий вопрос"),
-                            new KeyboardButton("Перевод текста"),
-                            new KeyboardButton("Назад")
                         }
                     });
                 keyboard.ResizeKeyboard = true;
@@ -249,6 +231,28 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+
+        /// <summary>
+        /// Выбор темы вопроса 
+        /// </summary>
+        internal static IReplyMarkup ChooseThemeButtons
+        {
+            get
+            {
+                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
+                    new List<List<KeyboardButton>>
+                    {
+                        new List<KeyboardButton>
+                        {
+                            new KeyboardButton("Случайная тема"),
+                            new KeyboardButton("Назад")
+                        }
+                    });
+                keyboard.ResizeKeyboard = true;
+                return keyboard;
+            }
+        }
+
         /// <summary>
         /// Кнопки главного меню учителя без кнопки вывода средств
         /// </summary>
@@ -269,6 +273,7 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+
         /// <summary>
         /// Кнопки главного меню учителя с кнопкой вывода средств
         /// </summary>
@@ -290,6 +295,7 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+
         /// <summary>
         /// Кнопки для оценки работы пользователя (1-10)
         /// </summary>
@@ -318,6 +324,7 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+
         /// <summary>
         /// Убирает все кнопки
         /// </summary>

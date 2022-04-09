@@ -44,7 +44,7 @@
         {
             Id = id;
             Theme = null;
-            Type = QuestionType.GeneralQuestion;
+            Type = QuestionType.Translation;
             Text = string.Empty;
         }
     }
@@ -54,10 +54,6 @@
     /// </summary>
     enum QuestionType
     {
-        /// <summary>
-        /// Общий вопрос по теме
-        /// </summary>
-        GeneralQuestion,
         /// <summary>
         /// Задание по переводу
         /// </summary>

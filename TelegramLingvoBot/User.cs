@@ -191,7 +191,7 @@ namespace TelegramLingvoBot
         /// <summary>
         /// Выбор типа работы, перед отправкой
         /// </summary>
-        AnswerTypeSelect,
+        AnswerThemeSelect,
         /// <summary>
         /// Ожидание ответа пользователя на вопрос
         /// </summary>
