@@ -38,7 +38,8 @@ namespace TelegramLingvoBot
                             new KeyboardButton("Магазин"),
                             new KeyboardButton("Работы"),
                             new KeyboardButton("Я готов"),
-                            new KeyboardButton("Профиль")
+                            new KeyboardButton("Профиль"),
+                            new KeyboardButton("Помощь"),
                         }
                     });
                 keyboard.ResizeKeyboard = true;
@@ -267,6 +268,7 @@ namespace TelegramLingvoBot
                         {
                             new KeyboardButton("Профиль"),
                             new KeyboardButton("Проверить"),
+                            new KeyboardButton("Помощь"),
                         }
                     });
                 keyboard.ResizeKeyboard = true;
@@ -289,6 +291,7 @@ namespace TelegramLingvoBot
                             new KeyboardButton("Профиль"),
                             new KeyboardButton("Проверить"),
                             new KeyboardButton("Вывод средств"),
+                            new KeyboardButton("Помощь"),
                         }
                     });
                 keyboard.ResizeKeyboard = true;

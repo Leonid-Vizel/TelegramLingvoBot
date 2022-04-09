@@ -205,6 +205,10 @@ namespace TelegramLingvoBot
         /// </summary>
         UserWaitingForReportNumber,
         /// <summary>
+        /// Помощь пользователю
+        /// </summary>
+        UserHelp,
+        /// <summary>
         /// Главное меню учителя
         /// </summary>
         TeacherMainMenu,
@@ -231,6 +235,10 @@ namespace TelegramLingvoBot
         ///<summary>
         ///Меню проверки эквивалентности
         ///</summary>
-        TeacherWorkCheckComment
+        TeacherWorkCheckComment,
+        ///<summary>
+        ///Меню помощи учителю
+        ///</summary>
+        TeacherHelp
     }
 }
