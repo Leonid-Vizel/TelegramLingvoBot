@@ -61,12 +61,17 @@ botClient.StartReceiving(
 var me = await botClient.GetMeAsync();
 
 Console.WriteLine($"Start listening for @{me.Username}");
+
 foreach (TelegramLingvoBot.User user in Users.Where(x => x.Position == DialogPosition.WaitingForResponce))
 {
-    await botClient.SendTextMessageAsync(chatId: user.Id, text: "Приносим свои извинения.\nПроизошла критическая ошибка бота и Ваш вопрос был сброшен. Попробуйте снова. Ваши оплаченные вопросы не убавились.", cancellationToken: cts.Token, replyMarkup: ButtonBank.UserMainMenuButtons);
+    await botClient.SendTextMessageAsync(chatId: user.Id, text: "Приносим свои извинения.\nПроизошла критическая ошибка бота и Ваш перевод был сброшен. Попробуйте снова. Ваши оплаченные переводы не убавились.", cancellationToken: cts.Token, replyMarkup: ButtonBank.UserMainMenuButtons);
     await user.SetPosition(dbInteract, DialogPosition.MainMenu);
 }
 
+foreach (TelegramLingvoBot.Teacher teacher in Teachers.Where(x=>x.Position == DialogPosition.))
+{
+
+}
 
 DateTime TimeToExecuteTask;
 if (DateTime.Now.Hour < 10)
@@ -88,7 +93,7 @@ cts.Cancel();
 
 async Task ProcessingUserMainMenuShop(TelegramLingvoBot.User? user, ITelegramBotClient botClient, CancellationToken cancellationToken)
 {
-    await botClient.SendTextMessageAsync(chatId: user.Id, text: $"Добро пожаловать в магазин! Доступно {await dbInteract.GetUserAvailibleQuestionsAmount(user.Id)} вопросов.\nВыберите кол - во вопросов которое хотите купить:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ShopButtons);
+    await botClient.SendTextMessageAsync(chatId: user.Id, text: $"Добро пожаловать в магазин! Доступно {await dbInteract.GetUserAvailibleQuestionsAmount(user.Id)} переводов.\nВыберите кол - во переводов которое хотите купить:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ShopButtons);
     await user.SetPosition(dbInteract, DialogPosition.ShopAmount);
 }
 
@@ -174,7 +179,7 @@ async Task ProcessingUserMainMenuProfile(TelegramLingvoBot.User? user, ITelegram
     StringBuilder builder = new StringBuilder();
     builder.AppendLine($"Ваш Id в системе: {user.Id}");
     builder.AppendLine($"Ваш рейтинг: {await dbInteract.GetUserRating(user.Id)}");
-    builder.AppendLine($"Количество оплаченных вопросов: {user.QuestionAmount}");
+    builder.AppendLine($"Количество оплаченных переводов: {user.QuestionAmount}");
     await user.SetPosition(dbInteract, DialogPosition.UserProfileMenu);
     await botClient.SendTextMessageAsync(chatId: user.Id, text: builder.ToString(), cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserProfileMenuButtons);
 }
@@ -207,7 +212,7 @@ async Task ProcessingUserChooseWorkId(TelegramLingvoBot.User? user, ITelegramBot
             }
             else
             {
-                StringBuilder builder = new StringBuilder($"Работа #{answer.Id}\nТема: {answer.Question.Theme.Name}\nВопрос: {answer.Question.Text}\n");
+                StringBuilder builder = new StringBuilder($"Работа #{answer.Id}\nТема: {answer.Question.Theme.Name}\nТекст: {answer.Question.Text}\n");
                 if (answer.Rate == null)
                 {
                     builder.AppendLine("Работа проверена: Нет");
@@ -240,22 +245,22 @@ async Task ProcessingUserShopAmount(TelegramLingvoBot.User? user, ITelegramBotCl
     {
         case "10":
             myList.Add(new LabeledPrice("Цена", 50000));
-            await botClient.SendInvoiceAsync(chatId: user.Id, title: "Покупка вопросов", description: "10 вопросов", payload: $"{user.Id}-10", providerToken: "381764678:TEST:35685", currency: "RUB", myList);
+            await botClient.SendInvoiceAsync(chatId: user.Id, title: "Покупка переводов", description: "10 переводов", payload: $"{user.Id}-10", providerToken: "381764678:TEST:35685", currency: "RUB", myList);
             break;
         case "50":
             myList.Add(new LabeledPrice("Цена", 230000));
-            await botClient.SendInvoiceAsync(chatId: user.Id, title: "Покупка вопросов", description: "50 вопросов", payload: $"{user.Id}-50", providerToken: "381764678:TEST:35685", currency: "RUB", myList);
+            await botClient.SendInvoiceAsync(chatId: user.Id, title: "Покупка переводов", description: "50 переводов", payload: $"{user.Id}-50", providerToken: "381764678:TEST:35685", currency: "RUB", myList);
             break;
         case "100":
             myList.Add(new LabeledPrice("Цена", 450000));
-            await botClient.SendInvoiceAsync(chatId: user.Id, title: "Покупка вопросов", description: "100 вопросов", payload: $"{user.Id}-100", providerToken: "381764678:TEST:35685", currency: "RUB", myList);
+            await botClient.SendInvoiceAsync(chatId: user.Id, title: "Покупка переводов", description: "100 переводов", payload: $"{user.Id}-100", providerToken: "381764678:TEST:35685", currency: "RUB", myList);
             break;
         case "Назад":
             await botClient.SendTextMessageAsync(chatId: user.Id, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
             await user.SetPosition(dbInteract, DialogPosition.MainMenu);
             break;
         default:
-            await botClient.SendTextMessageAsync(chatId: user.Id, text: "Извините, я Вас не понял 🤖🤖🤖\nВыберите кол - во вопросов которое хотите купить:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ShopButtons);
+            await botClient.SendTextMessageAsync(chatId: user.Id, text: "Извините, я Вас не понял 🤖🤖🤖\nВыберите кол - во переводов которое хотите купить:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ShopButtons);
             break;
     }
 }
@@ -285,7 +290,7 @@ async Task ProcessingTeacherMainMenuCheckAnswer(TelegramLingvoBot.Teacher? teach
             teacher.CurrentAnswer = answer;
             answer.TeacherId = teacher.Id;
             await teacher.SetPosition(dbInteract, DialogPosition.TeacherCheckAnswerEquivalence, connection);
-            await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Есть работа на проверку!\nВопрос: {answer.Question.Text}\nТекст: {answer.Text}", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
+            await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Есть работа на проверку!\nПереводы: {answer.Question.Text}\nТекст: {answer.Text}", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
             await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Оцените эквивалентность перевода: ", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
         }
     }
@@ -357,7 +362,7 @@ async Task ProcessingUserAnswerTypeSelectTranslateText(TelegramLingvoBot.User? u
             }
             else
             {
-                await botClient.SendTextMessageAsync(chatId: user.Id, text: "Извините, я Вас не понял 🤖🤖🤖\nВведите ID темы или нажмите на кнопку 'Случайная тема', для выбора вопроса из случайной темы: ", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ChooseThemeButtons);
+                await botClient.SendTextMessageAsync(chatId: user.Id, text: "Извините, я Вас не понял 🤖🤖🤖\nВведите ID темы или нажмите на кнопку 'Случайная тема', для выбора перевода из случайной темы: ", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ChooseThemeButtons);
             }
         }
     }
@@ -390,12 +395,12 @@ async Task ProcessingUserAnswerTypeSelectTranslateText(TelegramLingvoBot.User? u
                 }
                 else
                 {
-                    await botClient.SendTextMessageAsync(chatId: user.Id, text: "Извините, такая тема не найдена 🤖🤖🤖\nВведите ID темы или нажмите на кнопку 'Случайная тема', для выбора вопроса из случайной темы: ", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ChooseThemeButtons);
+                    await botClient.SendTextMessageAsync(chatId: user.Id, text: "Извините, такая тема не найдена 🤖🤖🤖\nВведите ID темы или нажмите на кнопку 'Случайная тема', для выбора перевода из случайной темы: ", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ChooseThemeButtons);
                 }
             }
             else
             {
-                await botClient.SendTextMessageAsync(chatId: user.Id, text: "Извините, я Вас не понял 🤖🤖🤖\nВведите ID темы или нажмите на кнопку 'Случайная тема', для выбора вопроса из случайной темы: ", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ChooseThemeButtons);
+                await botClient.SendTextMessageAsync(chatId: user.Id, text: "Извините, я Вас не понял 🤖🤖🤖\nВведите ID темы или нажмите на кнопку 'Случайная тема', для выбора перевода из случайной темы: ", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ChooseThemeButtons);
             }
         }
     }
@@ -406,7 +411,7 @@ async Task ProcessingUserWaitingForResponce(TelegramLingvoBot.User? user, ITeleg
     AwaitingAsnwer? awaitingAsnwer = awaitingAsnwers.FirstOrDefault(x => x.User.Id == user.Id);
     if (awaitingAsnwer == null)
     {
-        await botClient.SendTextMessageAsync(chatId: user.Id, text: "Приносим свои извинения.\nПроизошла критическая ошибка бота и Ваш вопрос был сброшен. Попробуйте снова. Ваши оплаченные вопросы не убавились.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+        await botClient.SendTextMessageAsync(chatId: user.Id, text: "Приносим свои извинения.\nПроизошла критическая ошибка бота и Ваш пее был сброшен. Попробуйте снова. Ваши оплаченные переводы не убавились.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
         await user.SetPosition(dbInteract, DialogPosition.MainMenu);
     }
     else
@@ -708,7 +713,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
         if (payUser != null)
         {
             await payUser.AddQuestions(dbInteract, amount);
-            await botClient.SendTextMessageAsync(chatId: userId, text: $"Спасибо за покупку! На ваш акканут добавлено {amount} вопросов!", cancellationToken: cancellationToken);
+            await botClient.SendTextMessageAsync(chatId: userId, text: $"Спасибо за покупку! На ваш акканут добавлено {amount} переводов!", cancellationToken: cancellationToken);
             await botClient.AnswerPreCheckoutQueryAsync(update.PreCheckoutQuery.Id);
         }
     }
@@ -735,7 +740,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
                 user = new TelegramLingvoBot.User(chatId);
                 Users.Add(user);
                 await dbInteract.AddUser(user);
-                await botClient.SendTextMessageAsync(chatId: chatId, text: "Спасибо за регистрацию! У Вас Есть 1 пробный вопрос.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+                await botClient.SendTextMessageAsync(chatId: chatId, text: "Спасибо за регистрацию! У Вас Есть 1 пробный перевод.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
             }
             else
             {
@@ -905,7 +910,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
                     await ProcessGoBackToMainMenu(user, botClient, cancellationToken);
                     break;
                 default:
-                    await botClient.SendTextMessageAsync(chatId: chatId, text: "Извините, я Вас не понял 🤖🤖🤖\nВыберите тип вопроса:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserProfileMenuButtons);
+                    await botClient.SendTextMessageAsync(chatId: chatId, text: "Извините, я Вас не понял 🤖🤖🤖\nВыберите тип перевода:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserProfileMenuButtons);
                     break;
             }
             break;

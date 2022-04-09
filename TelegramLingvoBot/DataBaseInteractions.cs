@@ -490,7 +490,7 @@ namespace TelegramLingvoBot
                     {
                         using (MySqlCommand command = connection.CreateCommand())
                         {
-                            command.CommandText = $"SELECT Text FROM questions WHERE Id = {question.Theme.Id};";
+                            command.CommandText = $"SELECT Text FROM themes WHERE Id = {question.Theme.Id};";
                             using (DbDataReader reader = await command.ExecuteReaderAsync())
                             {
                                 if (reader.HasRows)
@@ -557,7 +557,7 @@ namespace TelegramLingvoBot
                 {
                     using (MySqlCommand command = connectionInput.CreateCommand())
                     {
-                        command.CommandText = $"SELECT Text FROM questions WHERE Id = {question.Theme.Id};";
+                        command.CommandText = $"SELECT Text FROM themes WHERE Id = {question.Theme.Id};";
                         using (DbDataReader reader = await command.ExecuteReaderAsync())
                         {
                             if (reader.HasRows)

@@ -179,18 +179,6 @@ namespace TelegramLingvoBot
         /// <summary>
         /// Главное меню учителя
         /// </summary>
-        TeacherMainMenu,
-        /// <summary>
-        /// Ввод учителем комментария к работе
-        /// </summary>
-        TeacherWorkCheckComment,
-        /// <summary>
-        /// Ввод учителем оценки за работу
-        /// </summary>
-        TeacherWorkCheckRate,
-        /// <summary>
-        /// Выбор типа работы, перед отправкой
-        /// </summary>
         AnswerThemeSelect,
         /// <summary>
         /// Ожидание ответа пользователя на вопрос
@@ -212,9 +200,25 @@ namespace TelegramLingvoBot
         /// Меню добавления темы в 
         /// </summary>
         UserThemesIncrease,
+        /// <summary>
+        /// Ожидание ввода номера работы для подачи жалобы
+        /// </summary>
+        UserWaitingForReportNumber,
         ///<summary>
         ///Меню проверки эквивалентности
-        ///</summary>
+        ///</summary> 
+        TeacherMainMenu,
+        /// <summary>
+        /// Ввод учителем комментария к работе
+        /// </summary>
+        TeacherWorkCheckComment,
+        /// <summary>
+        /// Ввод учителем оценки за работу
+        /// </summary>
+        TeacherWorkCheckRate,
+        /// <summary>
+        /// Выбор типа работы, перед отправкой
+        /// </summary>
         TeacherCheckAnswerEquivalence,
         ///<summary>
         ///Меню проверки адекватности
@@ -235,11 +239,6 @@ namespace TelegramLingvoBot
         ///<summary>
         ///Меню проверки стиля
         ///</summary>
-        TeacherCheckAnswerStyle,
-        /// <summary>
-        /// Ожидание ввода номера работы для подачи жалобы
-        /// </summary>
-        UserWaitingForReportNumber
-
+        TeacherCheckAnswerStyle
     }
 }
