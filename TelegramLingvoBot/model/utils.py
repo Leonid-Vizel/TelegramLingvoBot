@@ -39,7 +39,7 @@ def text_correction(text: List[str] = None) -> List[str]:
         num_val = len(before_value)
         values = ['']*num_val
         for i in range(num_val):
-            values[i] = '**' + with_value[i][len(before_value[i]):-1] + '**'
+            values[i] = '*' + with_value[i][len(before_value[i]):-1] + '*'
         for i in range(num_val):
             sent = re.sub(r'<[cda].*?>.*?</[cda]>',values[i], sent, 1)
         corrected.append(sent)

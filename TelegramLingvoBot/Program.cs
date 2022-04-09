@@ -8,8 +8,11 @@ using Telegram.Bot.Types.Payments;
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramLingvoBot;
 using System.Timers;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 
 #region BaseLoading
+ConcurrentBag<Answer> answerBagForModel = new ConcurrentBag<Answer>(); 
 ParseMode ParseMode = Telegram.Bot.Types.Enums.ParseMode.Markdown;
 DataBaseInteractions dbInteract = new DataBaseInteractions("Server=wpl36.hosting.reg.ru;Database=u1615366_LingvoHack;User Id=u1615366_LingvoHack;Password=y21e&B4a;charset=utf8;");
 List<AwaitingAsnwer> awaitingAsnwers = new List<AwaitingAsnwer>();
@@ -1022,5 +1025,31 @@ async void ResetAllUsers(object? sender, ElapsedEventArgs e)
     foreach (TelegramLingvoBot.User user in usersUsedYesterday)
     {
         await botClient.SendTextMessageAsync(chatId: user.Id, text: "Доброе утро! Работа готова", cancellationToken: token);
+    }
+}
+
+void WorkWithModel()
+{
+    var startInfo = new ProcessStartInfo()
+    {
+        FileName = "cmd.exe",
+        Arguments = "python model.py",
+        WorkingDirectory = $"{Environment.CurrentDirectory}\\model",
+        UseShellExecute = true
+    };
+    Process.Start(startInfo);
+    bool flag = true;
+    while (flag)
+    {
+        if (answerBagForModel.Count > 0)
+        {
+            if (answerBagForModel.TryTake(out Answer answer))
+            {
+                System.IO.File.WriteAllText($"{Environment.CurrentDirectory}\\model\\text.txt", answer.Text);
+                while (!System.IO.File.Exists("prediction.txt")) { }
+                // answer.CheckedText = System.IO.File.ReadAllText();
+                // dbInteraction.SaveCheckedText(answer);
+            }
+        }
     }
 }
