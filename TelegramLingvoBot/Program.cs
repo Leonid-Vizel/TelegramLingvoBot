@@ -113,9 +113,16 @@ async Task ProcessAllUserWorks(TelegramLingvoBot.User? user, ITelegramBotClient 
                     worksBuilder.AppendLine($"{answer.Id}) Перевод текста - {checkedString}");
                 }
             }
-            await botClient.SendTextMessageAsync(chatId: user.Id, text: worksBuilder.ToString(), cancellationToken: cancellationToken, replyMarkup: null);
-            await botClient.SendTextMessageAsync(chatId: user.Id, text: "Введите Id работы, которую хотите посмотреть:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
             await user.SetPosition(dbInteract, DialogPosition.ChooseWorkId, connection);
+            await botClient.SendTextMessageAsync(chatId: user.Id, text: worksBuilder.ToString(), cancellationToken: cancellationToken, replyMarkup: null);
+            if (await dbInteract.GetCountOfUserReports(user.Id, connection) < 5)
+            {
+                await botClient.SendTextMessageAsync(chatId: user.Id, text: "Введите Id работы, которую хотите посмотреть или выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ChooseWorkButtons);
+            }
+            else
+            {
+                await botClient.SendTextMessageAsync(chatId: user.Id, text: "Введите Id работы, которую хотите посмотреть:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
+            }
         }
         else
         {
@@ -185,7 +192,14 @@ async Task ProcessingUserChooseWorkId(TelegramLingvoBot.User? user, ITelegramBot
             Answer? answer = await dbInteract.GetAnswer(result, connection);
             if (answer == null || answer.UserId != user.Id)
             {
-                await botClient.SendTextMessageAsync(chatId: user.Id, text: "Работа с таким Id не была найдена! 🤖🤖🤖\nВведите Id работы, которую хотите посмотреть:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
+                if (await dbInteract.GetCountOfUserReports(user.Id, connection) < 5)
+                {
+                    await botClient.SendTextMessageAsync(chatId: user.Id, text: "Работа с таким Id не была найдена! 🤖🤖🤖\nВведите Id работы, которую хотите посмотреть или выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ChooseWorkButtons);
+                }
+                else
+                {
+                    await botClient.SendTextMessageAsync(chatId: user.Id, text: "Работа с таким Id не была найдена! 🤖🤖🤖\nВведите Id работы, которую хотите посмотреть:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
+                }
             }
             else
             {
@@ -536,6 +550,38 @@ async Task ProcessingUserThemesMenuDecrease(TelegramLingvoBot.User? user, ITeleg
     }
 }
 
+async Task ProcessSendReportSelectWork(TelegramLingvoBot.User? user, ITelegramBotClient botClient, CancellationToken cancellationToken)
+{
+    await user.SetPosition(dbInteract, DialogPosition.UserWaitingForReportNumber);
+    await botClient.SendTextMessageAsync(chatId: user.Id, text: "Введите номер работы для подачи жалобы:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
+}
+
+async Task ProcessSendReport(TelegramLingvoBot.User? user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+{
+    if (long.TryParse(update.Message.Text, out long result))
+    {
+        using (var connection = dbInteract.GetConnection())
+        {
+            await connection.OpenAsync();
+            Answer? answer = await dbInteract.GetAnswer(result, connection);
+            if (answer == null || answer.UserId != user.Id)
+            {
+                await botClient.SendTextMessageAsync(chatId: user.Id, text: "Работа с таким Id не была найдена! 🤖🤖🤖\nВведите Id работы, на которую хотите подать жалобу:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
+            }
+            else
+            {
+                await dbInteract.AddReport(user.Id, answer.Id, connection);
+                await botClient.SendTextMessageAsync(chatId: user.Id, text: $"Ваша жалоба на проверку работы #{answer.Id} была успешно отправлена!\nОбратите внимание, если Вы будете отправлять сшком много жалоб, то эта функция станет недоступна!", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
+                await ProcessGoBackToMainMenu(user, botClient, cancellationToken);
+            }
+        }
+    }
+    else
+    {
+        await botClient.SendTextMessageAsync(chatId: user.Id, text: "Кажется Вы ввели что-то неправильно 🤖🤖🤖\nВведите Id работы, которую хотите посмотреть:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
+    }
+}
+
 async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
 {
     if (update.Type == UpdateType.PreCheckoutQuery && update.PreCheckoutQuery != null)
@@ -641,6 +687,9 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             {
                 case "Назад":
                     await ProcessGoBackToMainMenu(user, botClient, cancellationToken);
+                    break;
+                case "Отправить жалобу":
+                    await ProcessSendReportSelectWork(user, botClient, cancellationToken);
                     break;
                 default:
                     await ProcessingUserChooseWorkId(user, botClient, update, cancellationToken);
@@ -772,6 +821,17 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
                     break;
                 default:
                     await ProcessingUserThemesMenuDecrease(user, botClient, update, cancellationToken);
+                    break;
+            }
+            break;
+        case DialogPosition.UserWaitingForReportNumber:
+            switch (update.Message.Text)
+            {
+                case "Назад":
+                    await ProcessAllUserWorks(user, botClient, cancellationToken);
+                    break;
+                default:
+                    await ProcessSendReport(user, botClient, update, cancellationToken);
                     break;
             }
             break;

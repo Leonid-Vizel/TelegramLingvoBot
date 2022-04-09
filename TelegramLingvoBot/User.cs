@@ -211,6 +211,10 @@ namespace TelegramLingvoBot
         /// <summary>
         /// Меню добавления темы в 
         /// </summary>
-        UserThemesIncrease
+        UserThemesIncrease,
+        /// <summary>
+        /// Ожидание ввода номера работы для подачи жалобы
+        /// </summary>
+        UserWaitingForReportNumber
     }
 }

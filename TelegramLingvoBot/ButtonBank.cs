@@ -228,6 +228,27 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+
+        /// <summary>
+        /// Выбор типа вопроса 
+        /// </summary>
+        internal static IReplyMarkup ChooseWorkButtons
+        {
+            get
+            {
+                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
+                    new List<List<KeyboardButton>>
+                    {
+                        new List<KeyboardButton>
+                        {
+                            new KeyboardButton("Отправить жалобу"),
+                            new KeyboardButton("Назад")
+                        }
+                    });
+                keyboard.ResizeKeyboard = true;
+                return keyboard;
+            }
+        }
         /// <summary>
         /// Кнопки главного меню учителя без кнопки вывода средств
         /// </summary>

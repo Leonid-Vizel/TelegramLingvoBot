@@ -1385,7 +1385,8 @@ namespace TelegramLingvoBot
         /// <returns>Количество любимых тем пользователя</returns>
         public async Task<long> GetCountOfFavoriteThemes(long userId, MySqlConnection? connectionInput = null)
         {
-            int amount;
+            object? result;
+            long amount;
             if (connectionInput == null)
             {
                 using (MySqlConnection connection = new MySqlConnection(ConnectionString))
@@ -1393,19 +1394,9 @@ namespace TelegramLingvoBot
                     await connection.OpenAsync();
                     using (MySqlCommand command = connection.CreateCommand())
                     {
-                        command.CommandText = $"SELECT DISTINCT(ThemeId) FROM users_themes WHERE UserId = {userId};";
-                        using (DbDataReader readed = await command.ExecuteReaderAsync())
-                        {
-                            if (readed.HasRows)
-                            {
-                                await readed.ReadAsync();
-                                amount = readed.GetInt32(0);
-                            }
-                            else
-                            {
-                                amount = 0;
-                            }
-                        }
+                        command.CommandText = $"SELECT COUNT(DISTINCT(ThemeId)) FROM users_themes WHERE UserId = {userId};";
+                        result = await command.ExecuteScalarAsync();
+                        amount = (result == null || result == DBNull.Value) ? 0 : (long)result;
                     }
                 }
             }
@@ -1413,19 +1404,9 @@ namespace TelegramLingvoBot
             {
                 using (MySqlCommand command = connectionInput.CreateCommand())
                 {
-                    command.CommandText = $"SELECT DISTINCT(ThemeId) FROM users_themes WHERE UserId = {userId};";
-                    using (DbDataReader readed = await command.ExecuteReaderAsync())
-                    {
-                        if (readed.HasRows)
-                        {
-                            await readed.ReadAsync();
-                            amount = readed.GetInt32(0);
-                        }
-                        else
-                        {
-                            amount = 0;
-                        }
-                    }
+                    command.CommandText = $"SELECT COUNT(DISTINCT(ThemeId)) FROM users_themes WHERE UserId = {userId};";
+                    result = await command.ExecuteScalarAsync();
+                    amount = (result == null || result == DBNull.Value) ? 0 : (long)result;
                 }
             }
             return amount;
@@ -1543,6 +1524,64 @@ namespace TelegramLingvoBot
                 }
             }
             return theme;
+        }
+
+        /// <summary>
+        /// Отправляет жалобу
+        /// </summary>
+        /// <param name="answerId">Идентификатор ответа</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
+        public async Task AddReport(long userId, long answerId, MySqlConnection? connectionInput = null)
+        {
+            if (connectionInput == null)
+            {
+                using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    using (MySqlCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = $"INSERT INTO reports(UserId, AnswerId) VALUES({userId}, {answerId});";
+                        await command.ExecuteNonQueryAsync();
+                    }
+                }
+            }
+            else
+            {
+                using (MySqlCommand command = connectionInput.CreateCommand())
+                {
+                    command.CommandText = $"INSERT INTO reports(UserId, AnswerId) VALUES({userId}, {answerId});";
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
+        public async Task<long> GetCountOfUserReports(long userId, MySqlConnection? connectionInput = null)
+        {
+            object? result;
+            long amount;
+            if (connectionInput == null)
+            {
+                using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    using (MySqlCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = $"SELECT COUNT(DISTINCT(AnswerId)) FROM reports WHERE UserId={userId};";
+                        result = await command.ExecuteScalarAsync();
+                        amount = (result == null || result == DBNull.Value) ? 0 : (long)result;
+                    }
+                }
+            }
+            else
+            {
+                using (MySqlCommand command = connectionInput.CreateCommand())
+                {
+                    command.CommandText = $"SELECT COUNT(DISTINCT(AnswerId)) FROM reports WHERE UserId={userId};";
+                    result = await command.ExecuteScalarAsync();
+                    amount = (result == null || result == DBNull.Value) ? 0 : (long)result;
+                }
+            }
+            return amount;
         }
     }
 }
