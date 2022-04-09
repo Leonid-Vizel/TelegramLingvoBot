@@ -223,7 +223,7 @@ namespace TelegramLingvoBot
         ///<summary>
         ///Меню проверки офрмления
         ///</summary>
-        TeacherCheckAnswerRegistration,
+        TeacherCheckAnswerDesign,
         ///<summary>
         ///Меню проверки грамматики
         ///</summary>
@@ -235,6 +235,6 @@ namespace TelegramLingvoBot
         ///<summary>
         ///Меню проверки стиля
         ///</summary>
-        TeacherCheckStyle,
+        TeacherCheckAnswerStyle,
     }
 }
