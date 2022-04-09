@@ -21,9 +21,12 @@ List<TelegramLingvoBot.Teacher> Teachers;
 using (var connection = dbInteract.GetConnection())
 {
     await connection.OpenAsync();
-    Users = await dbInteract.GetAllUsers();
-    Teachers = await dbInteract.GetAllTeachers();
+    Users = await dbInteract.GetAllUsers(connection);
+    Teachers = await dbInteract.GetAllTeachers(connection);
+    (await dbInteract.GetAnswersForGrammarCheck(connection)).ForEach(x => answerBagForModel.Add(x));
 }
+Thread thread = new Thread(new ThreadStart(WorkWithModel));
+thread.Start();
 System.Timers.Timer mainTimer;
 #endregion
 
@@ -81,7 +84,7 @@ using (var connection = dbInteract.GetConnection())
         {
             teacher.CurrentAnswer.TeacherId = teacher.Id;
             await teacher.SetPosition(dbInteract, DialogPosition.TeacherCheckAnswerEquivalence, connection);
-            await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Есть работа на проверку!\nПереводы: {teacher.CurrentAnswer.Question.Text}\nТекст: {teacher.CurrentAnswer.Text}", cancellationToken: cts.Token);
+            await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Есть работа на проверку!\n*Исходный*: {teacher.CurrentAnswer.Question.Text}\n*Перевод ученика*: {teacher.CurrentAnswer.Text}", cancellationToken: cts.Token, parseMode: ParseMode);
             await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Оцените точность перевода: ", cancellationToken: cts.Token, replyMarkup: ButtonBank.RateForAnswerButtons);
         }
         else
@@ -1009,14 +1012,7 @@ async void ResetAllUsers(object? sender, ElapsedEventArgs e)
 
 void WorkWithModel()
 {
-    var startInfo = new ProcessStartInfo()
-    {
-        FileName = "cmd.exe",
-        Arguments = "python model.py",
-        WorkingDirectory = $"{Environment.CurrentDirectory}\\model",
-        UseShellExecute = true
-    };
-    Process.Start(startInfo);
+    Process.Start($"{Environment.CurrentDirectory}\\model\\python script.py");
     bool flag = true;
     while (flag)
     {
@@ -1024,10 +1020,13 @@ void WorkWithModel()
         {
             if (answerBagForModel.TryTake(out Answer answer))
             {
-                System.IO.File.WriteAllText($"{Environment.CurrentDirectory}\\model\\text.txt", answer.Text);
-                while (!System.IO.File.Exists("prediction.txt")) { }
-                // answer.CheckedText = System.IO.File.ReadAllText();
-                // dbInteraction.SaveCheckedText(answer);
+                System.IO.File.WriteAllText("model\\text.txt", answer.Text);
+                while (!System.IO.File.Exists("model\\prediction.txt")) { }
+                Thread.Sleep(500);
+                answer.CheckedByModel = System.IO.File.ReadAllText("model\\prediction.txt");
+                System.IO.File.Delete("model\\prediction.txt");
+                dbInteract.SetCheckedByModel(answer).Wait();
+                Console.WriteLine($"CHECKED! OUTPUT: {answer.CheckedByModel}");
             }
         }
     }

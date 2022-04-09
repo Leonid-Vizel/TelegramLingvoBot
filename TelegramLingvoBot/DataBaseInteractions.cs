@@ -103,7 +103,6 @@ namespace TelegramLingvoBot
             }
             else
             {
-                await connectionInput.OpenAsync();
                 await SetUTF8Async(connectionInput);
                 using (MySqlCommand command = connectionInput.CreateCommand())
                 {
@@ -166,7 +165,7 @@ namespace TelegramLingvoBot
                             }
                         }
                     }
-                    foreach(Teacher teacher in teachersToProcess)
+                    foreach (Teacher teacher in teachersToProcess)
                     {
                         teacher.CurrentAnswer = await GetAnswer(teacher.CurrentAnswer.Id, connection);
                     }
@@ -534,7 +533,7 @@ namespace TelegramLingvoBot
                                             reader.GetInt64(1),
                                             new Question(reader.GetInt32(2)),
                                             reader.GetTextReader(3).ReadToEnd(),
-                                            accuracyRate,styleRate, spellingRate, grammerRate, adequacyRate,  comment, teacherId));
+                                            accuracyRate, styleRate, spellingRate, grammerRate, adequacyRate, comment, teacherId));
                                 }
                             }
                         }
@@ -753,7 +752,7 @@ namespace TelegramLingvoBot
 
                     using (MySqlCommand command = connection.CreateCommand())
                     {
-                        command.CommandText = $"SELECT * FROM answers WHERE Rate is null";
+                        command.CommandText = $"SELECT * FROM answers WHERE AccuracyRate is null";
                         using (DbDataReader reader = await command.ExecuteReaderAsync())
                         {
                             if (reader.HasRows)
@@ -833,7 +832,7 @@ namespace TelegramLingvoBot
                 await SetUTF8Async(connectionInput);
                 using (MySqlCommand command = connectionInput.CreateCommand())
                 {
-                    command.CommandText = $"SELECT * FROM answers WHERE Rate is null";
+                    command.CommandText = $"SELECT * FROM answers WHERE AccuracyRate is null";
                     using (DbDataReader reader = await command.ExecuteReaderAsync())
                     {
                         if (reader.HasRows)
@@ -947,8 +946,8 @@ namespace TelegramLingvoBot
                                 answer = new Answer(reader.GetInt64(0),
                                         reader.GetInt64(1),
                                         new Question(reader.GetInt32(2)),
-                                        reader.GetTextReader(3).ReadToEnd(), 
-                                        accuracyRate, writingStyleRate, spellingRate, grammarRate, adequacyRate, 
+                                        reader.GetTextReader(3).ReadToEnd(),
+                                        accuracyRate, writingStyleRate, spellingRate, grammarRate, adequacyRate,
                                         comment, teacherId);
                             }
                             else
@@ -1667,6 +1666,92 @@ namespace TelegramLingvoBot
                 }
             }
             return ids;
+        }
+
+        public async Task SetCheckedByModel(Answer answer, MySqlConnection? connectionInput = null)
+        {
+            if (connectionInput == null)
+            {
+                using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    await SetUTF8Async(connection);
+                    using (MySqlCommand command = connection.CreateCommand())
+                    {
+                        if (answer.CheckedByModel == null)
+                        {
+                            command.CommandText = $"UPDATE answers SET CheckGrammarByModule = NULL WHERE Id = {answer.Id}";
+                        }
+                        else
+                        {
+                            command.CommandText = $"UPDATE answers SET CheckGrammarByModule = '{answer.CheckedByModel}' WHERE Id = {answer.Id}";
+                        }
+                        await command.ExecuteNonQueryAsync();
+                    }
+                }
+            }
+            else
+            {
+                await SetUTF8Async(connectionInput);
+                using (MySqlCommand command = connectionInput.CreateCommand())
+                {
+                    if (answer.CheckedByModel == null)
+                    {
+                        command.CommandText = $"UPDATE answers SET CheckGrammarByModule = NULL WHERE Id = {answer.Id}";
+                    }
+                    else
+                    {
+                        command.CommandText = $"UPDATE answers SET CheckGrammarByModule = '{answer.CheckedByModel}' WHERE Id = {answer.Id}";
+                    }
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
+        public async Task<List<Answer>> GetAnswersForGrammarCheck(MySqlConnection? connectionInput = null)
+        {
+            List<Answer> answerList = new List<Answer>();
+            if (connectionInput == null)
+            {
+                using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    await SetUTF8Async(connection);
+                    using (MySqlCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = "SELECT Id,Text FROM answers WHERE CheckGrammarByModule is null;";
+                        using (MySqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                while (await reader.ReadAsync())
+                                {
+                                    answerList.Add(new Answer(reader.GetInt64(0), 0, new Question(0), reader.GetTextReader(1).ReadToEnd(), null, null, null, null, null, null, null));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                await SetUTF8Async(connectionInput);
+                using (MySqlCommand command = connectionInput.CreateCommand())
+                {
+                    command.CommandText = "SELECT Id,Text FROM answers WHERE CheckGrammarByModule is null;";
+                    using (MySqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                answerList.Add(new Answer(reader.GetInt64(0), 0, new Question(0), reader.GetTextReader(1).ReadToEnd(), null, null, null, null, null, null, null));
+                            }
+                        }
+                    }
+                }
+            }
+            return answerList;
         }
     }
 }
