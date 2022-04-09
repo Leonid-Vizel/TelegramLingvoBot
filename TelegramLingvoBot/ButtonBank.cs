@@ -57,7 +57,7 @@ namespace TelegramLingvoBot
                     {
                         new List<KeyboardButton>
                         {
-                            new KeyboardButton("Редактировать любимые темы"),
+                            new KeyboardButton("Меню любимых тем"),
                             new KeyboardButton("Назад")
                         }
                     });
@@ -87,7 +87,7 @@ namespace TelegramLingvoBot
             }
         }
         /// <summary>
-        /// Меню любимых тем
+        /// Меню любимых тем без кнопки убрать
         /// </summary>
         internal static IReplyMarkup UserThemesMenuButtonsWithoutRemove
         {
@@ -99,6 +99,26 @@ namespace TelegramLingvoBot
                         new List<KeyboardButton>
                         {
                             new KeyboardButton("Добавить"),
+                            new KeyboardButton("Назад")
+                        }
+                    });
+                keyboard.ResizeKeyboard = true;
+                return keyboard;
+            }
+        }
+        /// <summary>
+        /// Меню любимых тем без кнопки добавить
+        /// </summary>
+        internal static IReplyMarkup UserThemesMenuButtonsWithoutAdd
+        {
+            get
+            {
+                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
+                    new List<List<KeyboardButton>>
+                    {
+                        new List<KeyboardButton>
+                        {
+                            new KeyboardButton("Убрать"),
                             new KeyboardButton("Назад")
                         }
                     });
@@ -126,6 +146,7 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+
         /// <summary>
         /// Кнопка Назад
         /// </summary>
@@ -145,6 +166,7 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+
         /// <summary>
         /// Кнопки с количествами вопросов для магазина
         /// </summary>
@@ -167,6 +189,7 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+
         /// <summary>
         /// Кнопки после показа материалов работы
         /// </summary>
@@ -187,10 +210,11 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+
         /// <summary>
         /// Выбор типа вопроса 
         /// </summary>
-        internal static IReplyMarkup AnswerTypeButtons
+        internal static IReplyMarkup ChooseWorkButtons
         {
             get
             {
@@ -199,8 +223,7 @@ namespace TelegramLingvoBot
                     {
                         new List<KeyboardButton>
                         {
-                            new KeyboardButton("Общий вопрос"),
-                            new KeyboardButton("Перевод текста"),
+                            new KeyboardButton("Отправить жалобу"),
                             new KeyboardButton("Назад")
                         }
                     });
@@ -208,6 +231,28 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+
+        /// <summary>
+        /// Выбор темы вопроса 
+        /// </summary>
+        internal static IReplyMarkup ChooseThemeButtons
+        {
+            get
+            {
+                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
+                    new List<List<KeyboardButton>>
+                    {
+                        new List<KeyboardButton>
+                        {
+                            new KeyboardButton("Случайная тема"),
+                            new KeyboardButton("Назад")
+                        }
+                    });
+                keyboard.ResizeKeyboard = true;
+                return keyboard;
+            }
+        }
+
         /// <summary>
         /// Кнопки главного меню учителя без кнопки вывода средств
         /// </summary>
@@ -228,6 +273,7 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+
         /// <summary>
         /// Кнопки главного меню учителя с кнопкой вывода средств
         /// </summary>
@@ -249,6 +295,7 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+
         /// <summary>
         /// Кнопки для оценки работы пользователя (1-10)
         /// </summary>
@@ -277,6 +324,7 @@ namespace TelegramLingvoBot
                 return keyboard;
             }
         }
+
         /// <summary>
         /// Убирает все кнопки
         /// </summary>

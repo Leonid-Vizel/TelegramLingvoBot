@@ -21,14 +21,7 @@ namespace TelegramLingvoBot
             this.ListStorage = ListStorage;
             this.dbInteract = dbInteract;
             this.Token = Token;
-            if (Question.Type == QuestionType.GeneralQuestion)
-            {
-                timer = new System.Timers.Timer(240000);
-            }
-            else
-            {
-                timer = new System.Timers.Timer(420000);
-            }
+            timer = new System.Timers.Timer(840000);
             timer.Elapsed += OnTimerElapsed;
             timer.Start();
         }

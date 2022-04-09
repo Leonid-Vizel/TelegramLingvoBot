@@ -191,7 +191,7 @@ namespace TelegramLingvoBot
         /// <summary>
         /// Выбор типа работы, перед отправкой
         /// </summary>
-        AnswerTypeSelect,
+        AnswerThemeSelect,
         /// <summary>
         /// Ожидание ответа пользователя на вопрос
         /// </summary>
@@ -236,5 +236,10 @@ namespace TelegramLingvoBot
         ///Меню проверки стиля
         ///</summary>
         TeacherCheckAnswerStyle,
+        /// <summary>
+        /// Ожидание ввода номера работы для подачи жалобы
+        /// </summary>
+        UserWaitingForReportNumber
+
     }
 }

@@ -953,185 +953,6 @@ namespace TelegramLingvoBot
         }
 
         /// <summary>
-        /// Находит все вопросы из базы, которые имеют соответствующий тип
-        /// </summary>
-        /// <param name="type">Тип вопросов который ищем</param>
-        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
-        /// <returns>Список вопросов соответствующего типа</returns>
-        public async Task<List<Question>> GetQuestionsByType(QuestionType type, MySqlConnection? connectionInput = null)
-        {
-            List<Question> questions = new List<Question>();
-            if (connectionInput == null)
-            {
-                using (MySqlConnection connection = new MySqlConnection(ConnectionString))
-                {
-                    await connection.OpenAsync();
-                    await SetUTF8Async(connection);
-                    using (MySqlCommand command = connection.CreateCommand())
-                    {
-                        command.CommandText = $"SELECT * FROM questions WHERE Type = {(int)type};";
-                        using (DbDataReader reader = await command.ExecuteReaderAsync())
-                        {
-                            if (reader.HasRows)
-                            {
-                                while (await reader.ReadAsync())
-                                {
-                                    questions.Add(new Question(reader.GetInt32(0), new Theme(reader.GetInt32(1)), (QuestionType)reader.GetInt32(3), reader.GetTextReader(2).ReadToEnd()));
-                                }
-                            }
-                        }
-                    }
-
-                    foreach (Question question in questions)
-                    {
-                        using (MySqlCommand command = connection.CreateCommand())
-                        {
-                            command.CommandText = $"SELECT Text FROM themes WHERE Id = {question.Theme.Id};";
-                            using (DbDataReader reader = await command.ExecuteReaderAsync())
-                            {
-                                if (reader.HasRows)
-                                {
-                                    await reader.ReadAsync();
-                                    question.Theme.Name = reader.GetTextReader(0).ReadToEnd();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                await SetUTF8Async(connectionInput);
-                using (MySqlCommand command = connectionInput.CreateCommand())
-                {
-                    command.CommandText = $"SELECT * FROM questions WHERE Type = {(int)type};";
-                    using (DbDataReader reader = await command.ExecuteReaderAsync())
-                    {
-                        if (reader.HasRows)
-                        {
-                            while (await reader.ReadAsync())
-                            {
-                                questions.Add(new Question(reader.GetInt32(0), new Theme(reader.GetInt32(1)), (QuestionType)reader.GetInt32(3), reader.GetTextReader(2).ReadToEnd()));
-                            }
-                        }
-                    }
-                }
-
-                foreach (Question question in questions)
-                {
-                    using (MySqlCommand command = connectionInput.CreateCommand())
-                    {
-                        command.CommandText = $"SELECT Text FROM themes WHERE Id = {question.Theme.Id};";
-                        using (DbDataReader reader = await command.ExecuteReaderAsync())
-                        {
-                            if (reader.HasRows)
-                            {
-                                await reader.ReadAsync();
-                                question.Theme.Name = reader.GetTextReader(0).ReadToEnd();
-                            }
-                        }
-                    }
-                }
-            }
-            return questions;
-        }
-
-        /// <summary>
-        /// Находит идентификаторы всех вопросов
-        /// </summary>
-        /// <param name="userId">Идентификатор пользователя для поиска в БД</param>
-        /// <param name="type">Тип вопроса для поиска в БД</param>
-        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
-        /// <returns></returns>
-        public async Task<List<int>> GetUserUsedQuestionIdsWithType(long userId, QuestionType type, MySqlConnection? connectionInput = null)
-        {
-            List<int> returnList = new List<int>();
-            if (connectionInput == null)
-            {
-                using (MySqlConnection connection = new MySqlConnection(ConnectionString))
-                {
-                    await connection.OpenAsync();
-                    await SetUTF8Async(connection);
-                    using (MySqlCommand command = connection.CreateCommand())
-                    {
-                        command.CommandText = $"SELECT DISTINCT QuestionId FROM answers WHERE UserId = {userId};";
-                        using (DbDataReader reader = await command.ExecuteReaderAsync())
-                        {
-                            if (reader.HasRows)
-                            {
-                                while (await reader.ReadAsync())
-                                {
-                                    returnList.Add(reader.GetInt32(0));
-                                }
-                            }
-                        }
-                    }
-                    List<int> correctIds = new List<int>();
-                    foreach (int id in returnList)
-                    {
-                        using (MySqlCommand command = connection.CreateCommand())
-                        {
-                            command.CommandText = $"SELECT Type FROM questions WHERE Id = {id};";
-                            using (DbDataReader reader = await command.ExecuteReaderAsync())
-                            {
-                                if (reader.HasRows)
-                                {
-                                    while (await reader.ReadAsync())
-                                    {
-                                        if ((QuestionType)reader.GetInt32(0) == type)
-                                        {
-                                            correctIds.Add(id);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                await SetUTF8Async(connectionInput);
-                using (MySqlCommand command = connectionInput.CreateCommand())
-                {
-                    command.CommandText = $"SELECT DISTINCT QuestionId FROM answers WHERE UserId = {userId};";
-                    using (DbDataReader reader = await command.ExecuteReaderAsync())
-                    {
-                        if (reader.HasRows)
-                        {
-                            while (await reader.ReadAsync())
-                            {
-                                returnList.Add(reader.GetInt32(0));
-                            }
-                        }
-                    }
-                }
-                List<int> correctIds = new List<int>();
-                foreach (int id in returnList)
-                {
-                    using (MySqlCommand command = connectionInput.CreateCommand())
-                    {
-                        command.CommandText = $"SELECT Type FROM questions WHERE Id = {id};";
-                        using (DbDataReader reader = await command.ExecuteReaderAsync())
-                        {
-                            if (reader.HasRows)
-                            {
-                                while (await reader.ReadAsync())
-                                {
-                                    if ((QuestionType)reader.GetInt32(0) == type)
-                                    {
-                                        correctIds.Add(id);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return returnList;
-        }
-
-        /// <summary>
         /// Даёт всем пользователям возможность ответить сегодня
         /// </summary>
         /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
@@ -1216,7 +1037,7 @@ namespace TelegramLingvoBot
         /// <param name="themeId">Идентификатор темы</param>
         /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
         /// <returns>Список вопросов из темы</returns>
-        public async Task<List<Question>?> GetQuesionsFromTheme(int themeId, MySqlConnection? connectionInput = null)
+        public async Task<List<Question>> GetQuesionsFromTheme(int themeId, MySqlConnection? connectionInput = null)
         {
             List<Question> questions = new List<Question>();
             if (connectionInput == null)
@@ -1237,7 +1058,7 @@ namespace TelegramLingvoBot
                             }
                             else
                             {
-                                return null;
+                                return questions;
                             }
                         }
                     }
@@ -1279,14 +1100,14 @@ namespace TelegramLingvoBot
                 }
                 using (MySqlCommand command = connectionInput.CreateCommand())
                 {
-                    command.CommandText = "SELECT Id,QuestionType,Text FROM questions;";
+                    command.CommandText = "SELECT Id,Type,Text FROM questions;";
                     using (DbDataReader reader = await command.ExecuteReaderAsync())
                     {
                         if (reader.HasRows)
                         {
                             while (await reader.ReadAsync())
                             {
-                                questions.Add(new Question(reader.GetInt32(0), theme, (QuestionType)reader.GetInt32(2), reader.GetTextReader(3).ReadToEnd()));
+                                questions.Add(new Question(reader.GetInt32(0), theme, (QuestionType)reader.GetInt32(1), reader.GetTextReader(2).ReadToEnd()));
                             }
                         }
                     }
@@ -1394,7 +1215,7 @@ namespace TelegramLingvoBot
                     await connection.OpenAsync();
                     using (MySqlCommand command = connection.CreateCommand())
                     {
-                        command.CommandText = $"SELECT DISTINCT(ThemeId) FROM users_themes WHERE UserId = {userId};";
+                        command.CommandText = $"SELECT COUNT(DISTINCT(ThemeId)) FROM users_themes WHERE UserId = {userId};";
                         result = await command.ExecuteScalarAsync();
                         amount = (result == null || result == DBNull.Value) ? 0 : (long)result;
                     }
@@ -1404,7 +1225,7 @@ namespace TelegramLingvoBot
             {
                 using (MySqlCommand command = connectionInput.CreateCommand())
                 {
-                    command.CommandText = $"SELECT ThemeId FROM users_themes WHERE UserId = {userId};";
+                    command.CommandText = $"SELECT COUNT(DISTINCT(ThemeId)) FROM users_themes WHERE UserId = {userId};";
                     result = await command.ExecuteScalarAsync();
                     amount = (result == null || result == DBNull.Value) ? 0 : (long)result;
                 }
@@ -1524,6 +1345,174 @@ namespace TelegramLingvoBot
                 }
             }
             return theme;
+        }
+
+        /// <summary>
+        /// Отправляет жалобу
+        /// </summary>
+        /// <param name="answerId">Идентификатор ответа</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
+        public async Task AddReport(long userId, long answerId, MySqlConnection? connectionInput = null)
+        {
+            if (connectionInput == null)
+            {
+                using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    using (MySqlCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = $"INSERT INTO reports(UserId, AnswerId) VALUES({userId}, {answerId});";
+                        await command.ExecuteNonQueryAsync();
+                    }
+                }
+            }
+            else
+            {
+                using (MySqlCommand command = connectionInput.CreateCommand())
+                {
+                    command.CommandText = $"INSERT INTO reports(UserId, AnswerId) VALUES({userId}, {answerId});";
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Получет количетсво жалоб от указанного пользователя
+        /// </summary>
+        /// <param name="userId">Идентификатор пользователя</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
+        /// <returns>Кол-во жалоб от пользователя</returns>
+        public async Task<long> GetCountOfUserReports(long userId, MySqlConnection? connectionInput = null)
+        {
+            object? result;
+            long amount;
+            if (connectionInput == null)
+            {
+                using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    using (MySqlCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = $"SELECT COUNT(DISTINCT(AnswerId)) FROM reports WHERE UserId={userId};";
+                        result = await command.ExecuteScalarAsync();
+                        amount = (result == null || result == DBNull.Value) ? 0 : (long)result;
+                    }
+                }
+            }
+            else
+            {
+                using (MySqlCommand command = connectionInput.CreateCommand())
+                {
+                    command.CommandText = $"SELECT COUNT(DISTINCT(AnswerId)) FROM reports WHERE UserId={userId};";
+                    result = await command.ExecuteScalarAsync();
+                    amount = (result == null || result == DBNull.Value) ? 0 : (long)result;
+                }
+            }
+            return amount;
+        }
+
+        public async Task<List<Question>> GetAllQuestions(MySqlConnection? connectionInput = null)
+        {
+            List<Question> questions = new List<Question>();
+            if (connectionInput == null)
+            {
+                using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    List<Theme> themes = await GetAllThemes(connection);
+                    using (MySqlCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = "SELECT Id,ThemeId,Type,Text FROM questions;";
+                        using (DbDataReader reader = await command.ExecuteReaderAsync())
+                        {
+                            if (reader.HasRows)
+                            {
+                                while (await reader.ReadAsync())
+                                {
+                                    Theme? themeFound = themes.FirstOrDefault(x => x.Id == reader.GetInt32(1));
+                                    if (themeFound != null)
+                                    {
+                                        questions.Add(new Question(reader.GetInt32(0),
+                                                    themeFound,
+                                                    (QuestionType)reader.GetInt32(2),
+                                                    reader.GetTextReader(3).ReadToEnd()));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                List<Theme> themes = await GetAllThemes(connectionInput);
+                using (MySqlCommand command = connectionInput.CreateCommand())
+                {
+                    command.CommandText = "SELECT Id,ThemeId,QuesionType,Text FROM questions;";
+                    using (DbDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        if (reader.HasRows)
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                Theme? themeFound = themes.FirstOrDefault(x => x.Id == reader.GetInt32(1));
+                                if (themeFound != null)
+                                {
+                                    questions.Add(new Question(reader.GetInt32(0),
+                                                themeFound,
+                                                (QuestionType)reader.GetInt32(2),
+                                                reader.GetTextReader(3).ReadToEnd()));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return questions;
+        }
+
+        public async Task<List<int>> GetUserUsedQuestionIdsFromTheme(long userId, int themeId, MySqlConnection? connectionInput = null)
+        {
+            List<int> ids = new List<int>();
+            if (connectionInput == null)
+            {
+                using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    using (MySqlCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = $"SELECT QuestionId FROM answers WHERE UserId = {userId} AND ThemeId = {themeId}";
+                        using (DbDataReader reader = await command.ExecuteReaderAsync())
+                        {
+                            if (reader.HasRows)
+                            {
+                                while(await reader.ReadAsync())
+                                {
+                                    ids.Add(reader.GetInt32(0));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                using (MySqlCommand command = connectionInput.CreateCommand())
+                {
+                    command.CommandText = $"SELECT QuestionId FROM answers WHERE UserId = {userId};";
+                    using (DbDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        if (reader.HasRows)
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                ids.Add(reader.GetInt32(0));
+                            }
+                        }
+                    }
+                }
+            }
+            return ids;
         }
     }
 }
