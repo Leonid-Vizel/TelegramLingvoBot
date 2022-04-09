@@ -201,6 +201,10 @@ namespace TelegramLingvoBot
         /// </summary>
         UserThemesIncrease,
         /// <summary>
+        /// Ввод жалобы пользователем
+        /// </summary>
+        UserWaitingForReportNumber,
+        /// <summary>
         /// Главное меню учителя
         /// </summary>
         TeacherMainMenu,
@@ -235,10 +239,6 @@ namespace TelegramLingvoBot
         ///<summary>
         ///Меню проверки эквивалентности
         ///</summary>
-        TeacherWorkCheckComment,
-        /// <summary>
-        /// Ввод учителем оценки за работу
-        /// </summary>
-        UserWaitingForReportNumber
+        TeacherWorkCheckComment
     }
 }

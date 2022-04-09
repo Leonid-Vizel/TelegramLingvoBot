@@ -134,6 +134,7 @@ namespace TelegramLingvoBot
         public async Task<List<Teacher>> GetAllTeachers(MySqlConnection? connectionInput = null)
         {
             List<Teacher> teachers = new List<Teacher>();
+            List<Teacher> teachersToProcess = new List<Teacher>();
             if (connectionInput == null)
             {
                 using (MySqlConnection connection = new MySqlConnection(ConnectionString))
@@ -153,7 +154,8 @@ namespace TelegramLingvoBot
                                     object answerObj = reader.GetValue(3);
                                     if (answerObj != DBNull.Value && answerObj != null)
                                     {
-                                        teacher.CurrentAnswer = await GetAnswer((long)answerObj, connection);
+                                        teacher.CurrentAnswer = new Answer((long)answerObj);
+                                        teachersToProcess.Add(teacher);
                                     }
                                     else
                                     {
@@ -163,6 +165,10 @@ namespace TelegramLingvoBot
                                 }
                             }
                         }
+                    }
+                    foreach(Teacher teacher in teachersToProcess)
+                    {
+                        teacher.CurrentAnswer = await GetAnswer(teacher.CurrentAnswer.Id, connection);
                     }
                 }
             }
@@ -347,6 +353,52 @@ namespace TelegramLingvoBot
                 using (MySqlCommand command = connectionInput.CreateCommand())
                 {
                     command.CommandText = $"UPDATE teachers SET Balance = {teacher.Balance}, DialogPosition = {(int)teacher.Position} WHERE id={teacher.Id}";
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Задаёт значение для проверяемого в данный момент ответа
+        /// </summary>
+        /// <param name="teacherId">Идентификатор учителя</param>
+        /// <param name="answerId">Идентификатор работы или null</param>
+        /// <param name="connectionInput">Объект подключения, если выполняется извне</param>
+        public async Task UpdateTeacherAnswerId(long teacherId, long? answerId, MySqlConnection? connectionInput = null)
+        {
+            if (connectionInput == null)
+            {
+                using (MySqlConnection connection = new MySqlConnection(ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    await SetUTF8Async(connection);
+                    using (MySqlCommand command = connection.CreateCommand())
+                    {
+                        if (answerId == null)
+                        {
+                            command.CommandText = $"UPDATE teachers SET CurrentAnswerId = null WHERE Id = {teacherId};";
+                        }
+                        else
+                        {
+                            command.CommandText = $"UPDATE teachers SET CurrentAnswerId = {answerId} WHERE Id = {teacherId};";
+                        }
+                        await command.ExecuteNonQueryAsync();
+                    }
+                }
+            }
+            else
+            {
+                await SetUTF8Async(connectionInput);
+                using (MySqlCommand command = connectionInput.CreateCommand())
+                {
+                    if (answerId == null)
+                    {
+                        command.CommandText = $"UPDATE teachers SET CurrentAnswerId = null WHERE Id = {teacherId};";
+                    }
+                    else
+                    {
+                        command.CommandText = $"UPDATE teachers SET CurrentAnswerId = {answerId} WHERE Id = {teacherId};";
+                    }
                     await command.ExecuteNonQueryAsync();
                 }
             }
@@ -663,6 +715,24 @@ namespace TelegramLingvoBot
                 {
                     await connection.OpenAsync();
                     await SetUTF8Async(connection);
+                    List<long> ids = new List<long>();
+                    using (MySqlCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = $"SELECT CurrentAnswer FROM teachers WHERE CurrentAnswer is not null";
+                        using (MySqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                while (await reader.ReadAsync())
+                                {
+                                    ids.Add(reader.GetInt64(0));
+                                }
+                            }
+                        }
+                    }
+
+                    List<Answer> answers = new List<Answer>();
+
                     using (MySqlCommand command = connection.CreateCommand())
                     {
                         command.CommandText = $"SELECT * FROM answers WHERE Rate is null";
@@ -679,7 +749,7 @@ namespace TelegramLingvoBot
                                 long userId = (long)userIdRead;
                                 int QuestionId = (int)QuestionIdRead;
                                 string textOfUser = (string)textOfUserRead;
-                                answer = new Answer(id, userId, new Question(QuestionId), textOfUser, null, null, null);
+                                answers.Add(new Answer(id, userId, new Question(QuestionId), textOfUser, null, null, null));
                             }
                             else
                             {
@@ -687,6 +757,14 @@ namespace TelegramLingvoBot
                             }
                         }
                     }
+
+                    answer = answers.Where(x => !ids.Contains(x.Id)).FirstOrDefault();
+
+                    if (answer == null)
+                    {
+                        return null;
+                    }
+
                     using (MySqlCommand command = connection.CreateCommand())
                     {
                         command.CommandText = $"SELECT ThemeId,Text FROM questions WHERE id = {answer.Question.Id};";
