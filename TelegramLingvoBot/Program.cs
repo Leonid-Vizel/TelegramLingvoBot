@@ -62,15 +62,22 @@ var me = await botClient.GetMeAsync();
 
 Console.WriteLine($"Start listening for @{me.Username}");
 
-foreach (TelegramLingvoBot.User user in Users.Where(x => x.Position == DialogPosition.WaitingForResponce))
+using (var connection = dbInteract.GetConnection())
 {
-    await botClient.SendTextMessageAsync(chatId: user.Id, text: "Приносим свои извинения.\nПроизошла критическая ошибка бота и Ваш перевод был сброшен. Попробуйте снова. Ваши оплаченные переводы не убавились.", cancellationToken: cts.Token, replyMarkup: ButtonBank.UserMainMenuButtons);
-    await user.SetPosition(dbInteract, DialogPosition.MainMenu);
-}
+    foreach (TelegramLingvoBot.User user in Users.Where(x => x.Position == DialogPosition.WaitingForResponce))
+    {
+        await botClient.SendTextMessageAsync(chatId: user.Id, text: "Приносим свои извинения.\nПроизошла критическая ошибка бота и Ваш перевод был сброшен. Попробуйте снова. Ваши оплаченные переводы не убавились.", cancellationToken: cts.Token, replyMarkup: ButtonBank.UserMainMenuButtons);
+        await user.SetPosition(dbInteract, DialogPosition.MainMenu, connection);
+    }
 
-foreach (TelegramLingvoBot.Teacher teacher in Teachers.Where(x=>x.Position == DialogPosition.))
-{
-
+    foreach (TelegramLingvoBot.Teacher teacher in Teachers.Where(x => (int)x.Position >= 12 && (int)x.Position <= 19))
+    {
+        await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Приносим свои извинения.\nПроизошла критическая ошибка бота и Ваша проверка была приостановлена. Возобновляем...", cancellationToken: cts.Token);
+        teacher.CurrentAnswer.TeacherId = teacher.Id;
+        await teacher.SetPosition(dbInteract, DialogPosition.TeacherCheckAnswerEquivalence, connection);
+        await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Есть работа на проверку!\nПереводы: {teacher.CurrentAnswer.Question.Text}\nТекст: {teacher.CurrentAnswer.Text}", cancellationToken: cts.Token);
+        await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Оцените эквивалентность перевода: ", cancellationToken: cts.Token, replyMarkup: ButtonBank.EmptyButtons);
+    }
 }
 
 DateTime TimeToExecuteTask;
@@ -84,6 +91,7 @@ else
 }
 mainTimer = new System.Timers.Timer((TimeToExecuteTask - DateTime.Now).TotalMilliseconds);
 mainTimer.Elapsed += ResetAllUsers;
+mainTimer.AutoReset = true;
 mainTimer.Start();
 Console.ReadLine();
 
@@ -605,7 +613,7 @@ async Task ProcessingTeacherCheckAnswerEquivalence(TelegramLingvoBot.Teacher? te
         await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Требуется ввести комментарий!", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
         return;
     }
-    teacher.CurrentAnswer.Comment = teacher.CurrentAnswer.Comment +  "\nЭквивалентность: " + update.Message.Text;
+    teacher.CurrentAnswer.Comment = teacher.CurrentAnswer.Comment + "\nЭквивалентность: " + update.Message.Text;
     await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Введите комментарий об адекватности текста:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
     await teacher.SetPosition(dbInteract, DialogPosition.TeacherCheckAnswerAdequacy);
 }

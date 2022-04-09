@@ -54,5 +54,14 @@
             Comment = comment;
             TeacherId = teacherId;
         }
+
+        /// <summary>
+        /// Запасной конструктор для неполной инициализации ответа
+        /// </summary>
+        /// <param name="id">Идентификатор ответа</param>
+        public Answer(long id)
+        {
+            Id = id;
+        }
     }
 }

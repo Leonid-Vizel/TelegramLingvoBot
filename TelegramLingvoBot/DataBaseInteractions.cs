@@ -133,7 +133,7 @@ namespace TelegramLingvoBot
         /// <returns>Список учителей, сохранённых в базе</returns>
         public async Task<List<Teacher>> GetAllTeachers(MySqlConnection? connectionInput = null)
         {
-            List<Teacher> users = new List<Teacher>();
+            List<Teacher> teachers = new List<Teacher>();
             if (connectionInput == null)
             {
                 using (MySqlConnection connection = new MySqlConnection(ConnectionString))
@@ -149,10 +149,17 @@ namespace TelegramLingvoBot
                             {
                                 while (await reader.ReadAsync())
                                 {
-                                    users.Add(new Teacher(
-                                            reader.GetInt64(0),
-                                            reader.GetDecimal(1),
-                                            (DialogPosition)reader.GetInt32(2)));
+                                    Teacher teacher = new Teacher(reader.GetInt64(0), reader.GetDecimal(1), (DialogPosition)reader.GetInt32(2));
+                                    object answerObj = reader.GetValue(3);
+                                    if (answerObj != DBNull.Value && answerObj != null)
+                                    {
+                                        teacher.CurrentAnswer = await GetAnswer((long)answerObj, connection);
+                                    }
+                                    else
+                                    {
+                                        teacher.CurrentAnswer = null;
+                                    }
+                                    teachers.Add(teacher);
                                 }
                             }
                         }
@@ -161,7 +168,6 @@ namespace TelegramLingvoBot
             }
             else
             {
-                await connectionInput.OpenAsync();
                 await SetUTF8Async(connectionInput);
                 using (MySqlCommand command = connectionInput.CreateCommand())
                 {
@@ -172,16 +178,23 @@ namespace TelegramLingvoBot
                         {
                             while (await reader.ReadAsync())
                             {
-                                users.Add(new Teacher(
-                                        reader.GetInt64(0),
-                                        reader.GetDecimal(1),
-                                        (DialogPosition)reader.GetInt32(2)));
+                                Teacher teacher = new Teacher(reader.GetInt64(0), reader.GetDecimal(1), (DialogPosition)reader.GetInt32(2));
+                                object answerObj = reader.GetValue(3);
+                                if (answerObj != DBNull.Value && answerObj != null)
+                                {
+                                    teacher.CurrentAnswer = await GetAnswer((long)answerObj, connectionInput);
+                                }
+                                else
+                                {
+                                    teacher.CurrentAnswer = null;
+                                }
+                                teachers.Add(teacher);
                             }
                         }
                     }
                 }
             }
-            return users;
+            return teachers;
         }
 
         /// <summary>
@@ -1486,7 +1499,7 @@ namespace TelegramLingvoBot
                         {
                             if (reader.HasRows)
                             {
-                                while(await reader.ReadAsync())
+                                while (await reader.ReadAsync())
                                 {
                                     ids.Add(reader.GetInt32(0));
                                 }
