@@ -211,6 +211,30 @@ namespace TelegramLingvoBot
         /// <summary>
         /// Меню добавления темы в 
         /// </summary>
-        UserThemesIncrease
+        UserThemesIncrease,
+        ///<summary>
+        ///Меню проверки эквивалентности
+        ///</summary>
+        TeacherCheckAnswerEquivalence,
+        ///<summary>
+        ///Меню проверки адекватности
+        ///</summary>
+        TeacherCheckAnswerAdequacy,
+        ///<summary>
+        ///Меню проверки офрмления
+        ///</summary>
+        TeacherCheckAnswerRegistration,
+        ///<summary>
+        ///Меню проверки грамматики
+        ///</summary>
+        TeacherCheckAnswerGrammar,
+        ///<summary>
+        ///Меню проверки орфографии
+        ///</summary>
+        TeacherCheckAnswerSpelling,
+        ///<summary>
+        ///Меню проверки стиля
+        ///</summary>
+        TeacherCheckStyle,
     }
 }
