@@ -1385,8 +1385,7 @@ namespace TelegramLingvoBot
         /// <returns>Количество любимых тем пользователя</returns>
         public async Task<long> GetCountOfFavoriteThemes(long userId, MySqlConnection? connectionInput = null)
         {
-            object? result;
-            long amount;
+            int amount;
             if (connectionInput == null)
             {
                 using (MySqlConnection connection = new MySqlConnection(ConnectionString))
@@ -1395,8 +1394,18 @@ namespace TelegramLingvoBot
                     using (MySqlCommand command = connection.CreateCommand())
                     {
                         command.CommandText = $"SELECT DISTINCT(ThemeId) FROM users_themes WHERE UserId = {userId};";
-                        result = await command.ExecuteScalarAsync();
-                        amount = (result == null || result == DBNull.Value) ? 0 : (long)result;
+                        using (DbDataReader readed = await command.ExecuteReaderAsync())
+                        {
+                            if (readed.HasRows)
+                            {
+                                await readed.ReadAsync();
+                                amount = readed.GetInt32(0);
+                            }
+                            else
+                            {
+                                amount = 0;
+                            }
+                        }
                     }
                 }
             }
@@ -1404,9 +1413,19 @@ namespace TelegramLingvoBot
             {
                 using (MySqlCommand command = connectionInput.CreateCommand())
                 {
-                    command.CommandText = $"SELECT ThemeId FROM users_themes WHERE UserId = {userId};";
-                    result = await command.ExecuteScalarAsync();
-                    amount = (result == null || result == DBNull.Value) ? 0 : (long)result;
+                    command.CommandText = $"SELECT DISTINCT(ThemeId) FROM users_themes WHERE UserId = {userId};";
+                    using (DbDataReader readed = await command.ExecuteReaderAsync())
+                    {
+                        if (readed.HasRows)
+                        {
+                            await readed.ReadAsync();
+                            amount = readed.GetInt32(0);
+                        }
+                        else
+                        {
+                            amount = 0;
+                        }
+                    }
                 }
             }
             return amount;

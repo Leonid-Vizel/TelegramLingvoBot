@@ -57,7 +57,7 @@ namespace TelegramLingvoBot
                     {
                         new List<KeyboardButton>
                         {
-                            new KeyboardButton("Редактировать любимые темы"),
+                            new KeyboardButton("Меню любимых тем"),
                             new KeyboardButton("Назад")
                         }
                     });
@@ -87,7 +87,7 @@ namespace TelegramLingvoBot
             }
         }
         /// <summary>
-        /// Меню любимых тем
+        /// Меню любимых тем без кнопки убрать
         /// </summary>
         internal static IReplyMarkup UserThemesMenuButtonsWithoutRemove
         {
@@ -99,6 +99,26 @@ namespace TelegramLingvoBot
                         new List<KeyboardButton>
                         {
                             new KeyboardButton("Добавить"),
+                            new KeyboardButton("Назад")
+                        }
+                    });
+                keyboard.ResizeKeyboard = true;
+                return keyboard;
+            }
+        }
+        /// <summary>
+        /// Меню любимых тем без кнопки добавить
+        /// </summary>
+        internal static IReplyMarkup UserThemesMenuButtonsWithoutAdd
+        {
+            get
+            {
+                ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(
+                    new List<List<KeyboardButton>>
+                    {
+                        new List<KeyboardButton>
+                        {
+                            new KeyboardButton("Убрать"),
                             new KeyboardButton("Назад")
                         }
                     });
