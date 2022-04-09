@@ -88,7 +88,7 @@ using (var connection = dbInteract.GetConnection())
                 teacherMainMenuButtons = ButtonBank.TeacherMainMenuButtonsWithoutWithdrawalOfFunds;
             }
             await teacher.SetPosition(dbInteract, DialogPosition.TeacherMainMenu, connection);
-            await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"выберите опцию: ", cancellationToken: cts.Token, replyMarkup: teacherMainMenuButtons);
+            await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Выберите опцию: ", cancellationToken: cts.Token, replyMarkup: teacherMainMenuButtons);
         }
     }
 }
@@ -114,7 +114,7 @@ cts.Cancel();
 
 async Task ProcessingUserMainMenuShop(TelegramLingvoBot.User? user, ITelegramBotClient botClient, CancellationToken cancellationToken)
 {
-    await botClient.SendTextMessageAsync(chatId: user.Id, text: $"Добро пожаловать в магазин! Доступно {await dbInteract.GetUserAvailibleQuestionsAmount(user.Id)} переводов.\nВыберите кол - во переводов которое хотите купить:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ShopButtons);
+    await botClient.SendTextMessageAsync(chatId: user.Id, text: $"Добро пожаловать в магазин! Доступно {(await dbInteract.GetAllQuestions()).Count} переводов.\nВыберите кол - во переводов которое хотите купить:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.ShopButtons);
     await user.SetPosition(dbInteract, DialogPosition.ShopAmount);
 }
 
@@ -468,19 +468,19 @@ async Task ProcessingUserThemesMenu(TelegramLingvoBot.User? user, ITelegramBotCl
         else
         {
             StringBuilder builder = new StringBuilder();
-            builder.AppendLine("Ваши любимые темы:");
-            foreach (Theme theme in userThemes)
+            builder.AppendLine("**Ваши любимые темы:**");
+            foreach (Theme theme in userThemes.OrderBy(x=>x.Id))
             {
-                builder.AppendLine(theme.Name);
+                builder.AppendLine($"__{theme.Name}__");
             }
-            if (userThemes.Count == await dbInteract.GetCountOfFavoriteThemes(user.Id, connection))
+            if (userThemes.Count == (await dbInteract.GetAllThemes(connection)).Count())
             {
-                builder.Append("Хотите убрать какие-то из текущих?");
+                builder.Append("**Хотите убрать какие-нибудь из текущих?**");
                 await botClient.SendTextMessageAsync(chatId: user.Id, text: builder.ToString(), cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserThemesMenuButtonsWithoutAdd);
             }
             else
             {
-                builder.Append("Хотите добавить новые темы или убрать текущие?");
+                builder.Append("**Хотите добавить новые темы или убрать текущие?**");
                 await botClient.SendTextMessageAsync(chatId: user.Id, text: builder.ToString(), cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserThemesMenuButtons);
             }
         }
@@ -498,7 +498,7 @@ async Task ProcessingIncreaseUserThemesMenu(TelegramLingvoBot.User? user, ITeleg
         userThemesToExcept = await dbInteract.GetFavoriteThemesOfUser(user.Id, connection);
         if (userThemesToExcept.Count == allThemes.Count)
         {
-            await botClient.SendTextMessageAsync(chatId: user.Id, text: "Вы уже выбрали все любимые темы.", cancellationToken: cancellationToken);
+            await botClient.SendTextMessageAsync(chatId: user.Id, text: "**Все** темы бота уже добавлены в ваши любимые.", cancellationToken: cancellationToken);
             await ProcessingUserThemesMenu(user, botClient, cancellationToken);
         }
         else
@@ -506,9 +506,9 @@ async Task ProcessingIncreaseUserThemesMenu(TelegramLingvoBot.User? user, ITeleg
             StringBuilder builder = new StringBuilder();
             foreach (Theme theme in allThemes.Where(x => !userThemesToExcept.Any(y => y.Id == x.Id)))
             {
-                builder.AppendLine($"{theme.Id}) {theme.Name}");
+                builder.AppendLine($"**{theme.Id}**) __{theme.Name}__");
             }
-            builder.AppendLine("Выберите ID темы, которую хотите доавбить:");
+            builder.AppendLine("Выберите **ID** тем, которую хотите доавбить:");
             await user.SetPosition(dbInteract, DialogPosition.UserThemesIncrease, connection);
             await botClient.SendTextMessageAsync(chatId: user.Id, text: builder.ToString(), cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton);
         }
@@ -553,7 +553,7 @@ async Task ProcessingUserThemesMenuIncrease(TelegramLingvoBot.User? user, ITeleg
                 if (!userThemes.Any(x => x.Id == theme.Id))
                 {
                     await dbInteract.AddFavoriteTheme(user.Id, theme.Id, connection);
-                    if (userThemes.Count() + 1 == await dbInteract.GetCountOfFavoriteThemes(user.Id, connection))
+                    if (userThemes.Count() + 1 == (await dbInteract.GetAllThemes(connection)).Count)
                     {
                         await botClient.SendTextMessageAsync(chatId: user.Id, text: "Тема успешно добавлена!", cancellationToken: cancellationToken);
                         await ProcessingUserThemesMenu(user, botClient, cancellationToken);
@@ -764,10 +764,12 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
                 Users.Add(user);
                 await dbInteract.AddUser(user);
                 await botClient.SendTextMessageAsync(chatId: chatId, text: "Спасибо за регистрацию! У Вас Есть 1 пробный перевод.", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+                return;
             }
             else
             {
                 await botClient.SendTextMessageAsync(chatId: chatId, text: "Привет! Пожалуйста зарегестрируйся)", cancellationToken: cancellationToken, replyMarkup: ButtonBank.RegisterButton);
+                return;
             }
         }
     }

@@ -52,7 +52,7 @@ namespace TelegramLingvoBot
                     await SetUTF8Async(connection);
                     using (MySqlCommand command = connection.CreateCommand())
                     {
-                        command.CommandText = $"INSERT INTO users(id, QuestionAmount, DialogPosition, QueestionReady) VALUES({ user.Id}, {user.QuestionAmount}, {(int)user.Position}, {Convert.ToInt32(user.QuestionReady)});";
+                        command.CommandText = $"INSERT INTO users(id, QuestionAmount, DialogPosition, QuestionReady) VALUES({ user.Id}, {user.QuestionAmount}, {(int)user.Position}, {Convert.ToInt32(user.QuestionReady)});";
                         await command.ExecuteNonQueryAsync();
                     }
                 }
