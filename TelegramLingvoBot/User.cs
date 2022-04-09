@@ -217,10 +217,6 @@ namespace TelegramLingvoBot
         ///</summary>
         TeacherCheckAnswerAdequacy,
         ///<summary>
-        ///Меню проверки офрмления
-        ///</summary>
-        TeacherCheckAnswerDesign,
-        ///<summary>
         ///Меню проверки грамматики
         ///</summary>
         TeacherCheckAnswerGrammar,
@@ -232,10 +228,6 @@ namespace TelegramLingvoBot
         ///Меню проверки стиля
         ///</summary>
         TeacherCheckAnswerStyle,
-        /// <summary>
-        /// Ожидание ввода номера работы для подачи жалобы
-        /// </summary>
-        TeacherWorkCheckRate,
         ///<summary>
         ///Меню проверки эквивалентности
         ///</summary>

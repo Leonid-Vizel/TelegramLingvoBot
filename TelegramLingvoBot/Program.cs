@@ -82,7 +82,7 @@ using (var connection = dbInteract.GetConnection())
             teacher.CurrentAnswer.TeacherId = teacher.Id;
             await teacher.SetPosition(dbInteract, DialogPosition.TeacherCheckAnswerEquivalence, connection);
             await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Есть работа на проверку!\nПереводы: {teacher.CurrentAnswer.Question.Text}\nТекст: {teacher.CurrentAnswer.Text}", cancellationToken: cts.Token);
-            await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Оцените эквивалентность перевода: ", cancellationToken: cts.Token, replyMarkup: ButtonBank.EmptyButtons);
+            await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Оцените точность перевода: ", cancellationToken: cts.Token, replyMarkup: ButtonBank.RateForAnswerButtons);
         }
         else
         {
@@ -133,7 +133,7 @@ async Task ProcessAllUserWorks(TelegramLingvoBot.User? user, ITelegramBotClient 
         {
             foreach (Answer answer in answersOfUser)
             {
-                string checkedString = answer.Rate == null ? "Не проверен" : "Проверен";
+                string checkedString = answer.AccuracyRate == null ? "Не проверен" : "Проверен";
                 worksBuilder.AppendLine($"{answer.Id}) Перевод текста({answer.Question.Theme.Name}) - {checkedString}");
             }
             await user.SetPosition(dbInteract, DialogPosition.ChooseWorkId, connection);
@@ -237,8 +237,8 @@ async Task ProcessingUserChooseWorkId(TelegramLingvoBot.User? user, ITelegramBot
             }
             else
             {
-                StringBuilder builder = new StringBuilder($"*Работа #{answer.Id}*\n*Тема*: {answer.Question.Theme.Name}\n*Текст:* {answer.Question.Text}\n");
-                if (answer.Rate == null)
+                StringBuilder builder = new StringBuilder($"Работа #{answer.Id}\nТема: {answer.Question.Theme.Name}\nТекст: {answer.Question.Text}\n");
+                if (answer.AccuracyRate == null)
                 {
                     builder.AppendLine("*Работа проверена:* Нет");
                 }
@@ -247,7 +247,7 @@ async Task ProcessingUserChooseWorkId(TelegramLingvoBot.User? user, ITelegramBot
                     builder.AppendLine("*Работа проверена:* Да");
                 }
                 builder.AppendLine($"*Текст работы:*\n{answer.Text}");
-                if (answer.Rate != null)
+                if (answer.AccuracyRate != null)
                 {
                     builder.AppendLine($"*Оценка эксперта:* {answer.Rate}/10{answer.Comment}");
                 }
@@ -317,7 +317,7 @@ async Task ProcessingTeacherMainMenuCheckAnswer(TelegramLingvoBot.Teacher? teach
             await dbInteract.UpdateTeacherAnswerId(teacher.Id, teacher.CurrentAnswer.Id, connection);
             await teacher.SetPosition(dbInteract, DialogPosition.TeacherCheckAnswerEquivalence, connection);
             await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Есть работа на проверку!\nПереводы: {answer.Question.Text}\nТекст: {answer.Text}", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
-            await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Оцените эквивалентность перевода: ", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
+            await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Оцените точность перевода: ", cancellationToken: cancellationToken, replyMarkup: ButtonBank.RateForAnswerButtons);
         }
     }
 }
@@ -326,7 +326,7 @@ async Task ProcessingTeacherWorkCheckComment(TelegramLingvoBot.Teacher? teacher,
 {
     using (var connection = dbInteract.GetConnection())
     {
-        teacher.CurrentAnswer.Comment = teacher.CurrentAnswer.Comment + "\nКомментарий эксперта:" + update.Message.Text;
+        teacher.CurrentAnswer.Comment = update.Message.Text;
         await connection.OpenAsync();
         await dbInteract.UpdateAnswer(teacher.CurrentAnswer, connection);
         await teacher.AddBalance(dbInteract, 25, connection);
@@ -335,27 +335,6 @@ async Task ProcessingTeacherWorkCheckComment(TelegramLingvoBot.Teacher? teacher,
         await teacher.SetPosition(dbInteract, DialogPosition.TeacherMainMenu, connection);
         teacher.CurrentAnswer = null;
         await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Отлично! Ваша проверка отправлена! На Ваш баланс добавлено: 25 рублей", cancellationToken: cancellationToken, replyMarkup: teacherMainMenuButtons);
-    }
-}
-
-async Task ProcessingTeacherWorkCheckRate(TelegramLingvoBot.Teacher? teacher, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
-{
-    if (int.TryParse(update.Message.Text, out int rate))
-    {
-        if (0 < rate && rate <= 10)
-        {
-            using (var connection = dbInteract.GetConnection())
-            {
-                teacher.CurrentAnswer.Rate = rate;
-                await teacher.SetPosition(dbInteract, DialogPosition.TeacherWorkCheckComment);
-                await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Введите комментарий:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
-                teacher.SetPosition(dbInteract, DialogPosition.TeacherWorkCheckComment);
-            }
-        }
-    }
-    else
-    {
-        await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Извините, я Вас не понял 🤖🤖🤖", cancellationToken: cancellationToken, replyMarkup: ButtonBank.RateForAnswerButtons);
     }
 }
 
@@ -625,76 +604,94 @@ async Task ProcessingUserThemesMenuDecrease(TelegramLingvoBot.User? user, ITeleg
     }
 }
 
-async Task ProcessingTeacherCheckAnswerEquivalence(TelegramLingvoBot.Teacher? teacher, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+async Task ProcessingTeacherCheckAnswerAccuracy(TelegramLingvoBot.Teacher? teacher, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
 {
-    if (update.Message.Text.Equals(""))
+    if (int.TryParse(update.Message.Text, out int result))
     {
-        await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Требуется ввести комментарий!", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
+        if (result >= 1 && result <= 10)
+        {
+            teacher.CurrentAnswer.AccuracyRate = result;
+            await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Оцените адекватность текста:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.RateForAnswerButtons);
+            await teacher.SetPosition(dbInteract, DialogPosition.TeacherCheckAnswerAdequacy);
+        }
+    }
+    else
+    {
+        await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Требуется ввести оценку!", cancellationToken: cancellationToken, replyMarkup: ButtonBank.RateForAnswerButtons);
         return;
     }
-    teacher.CurrentAnswer.Comment = teacher.CurrentAnswer.Comment + "\nЭквивалентность: " + update.Message.Text;
-    await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Введите комментарий об адекватности текста:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
-    await teacher.SetPosition(dbInteract, DialogPosition.TeacherCheckAnswerAdequacy);
 }
 
 async Task ProcessingTeacherCheckAnswerAdequacy(TelegramLingvoBot.Teacher? teacher, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
 {
-    if (update.Message.Text.Equals(""))
+    if (int.TryParse(update.Message.Text, out int result))
     {
-        await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Требуется ввести комментарий!", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
+        if (result >= 1 && result <= 10)
+        {
+            teacher.CurrentAnswer.AdequacyRate = result;
+            await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Оцените грамматику текста:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.RateForAnswerButtons);
+            await teacher.SetPosition(dbInteract, DialogPosition.TeacherCheckAnswerGrammar);
+        }
+    }
+    else
+    {
+        await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Требуется ввести оценку!", cancellationToken: cancellationToken, replyMarkup: ButtonBank.RateForAnswerButtons);
         return;
     }
-    teacher.CurrentAnswer.Comment = teacher.CurrentAnswer.Comment + "\nАдекватность: " + update.Message.Text;
-    await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Введите комментарий об офоромлении текста:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
-    await teacher.SetPosition(dbInteract, DialogPosition.TeacherCheckAnswerDesign);
-}
-
-async Task ProcessingTeacherCheckAnswerDesign(TelegramLingvoBot.Teacher? teacher, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
-{
-    if (update.Message.Text.Equals(""))
-    {
-        await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Требуется ввести комментарий!", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
-        return;
-    }
-    teacher.CurrentAnswer.Comment = teacher.CurrentAnswer.Comment + "\nОформление: " + update.Message.Text;
-    await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Введите комментарий о грамматике текста:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
-    await teacher.SetPosition(dbInteract, DialogPosition.TeacherCheckAnswerGrammar);
 }
 
 async Task ProcessingTeacherCheckAnswerGrammar(TelegramLingvoBot.Teacher? teacher, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
 {
-    if (update.Message.Text.Equals(""))
+    if (int.TryParse(update.Message.Text, out int result))
     {
-        await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Требуется ввести комментарий!", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
+        if (result >= 1 && result <= 10)
+        {
+            teacher.CurrentAnswer.GrammarRate = result;
+            await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Оцените орфографию текста:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.RateForAnswerButtons);
+            await teacher.SetPosition(dbInteract, DialogPosition.TeacherCheckAnswerSpelling);
+        }
+    }
+    else
+    {
+        await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Требуется ввести оценку!", cancellationToken: cancellationToken, replyMarkup: ButtonBank.RateForAnswerButtons);
         return;
     }
-    teacher.CurrentAnswer.Comment = teacher.CurrentAnswer.Comment + "\nГрамматика: " + update.Message.Text;
-    await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Введите коментарий об орфографии текста:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
-    await teacher.SetPosition(dbInteract, DialogPosition.TeacherCheckAnswerSpelling);
 }
 
 async Task ProcessingTeacherCheckAnswerSpelling(TelegramLingvoBot.Teacher? teacher, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
 {
-    if (update.Message.Text.Equals(""))
+    if (int.TryParse(update.Message.Text, out int result))
     {
-        await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Требуется ввести комментарий!", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
+        if(result >= 1 && result <= 10)
+        {
+            teacher.CurrentAnswer.SpellingRate = result;
+            await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Оцените соответствие стиля текста:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.RateForAnswerButtons);
+            await teacher.SetPosition(dbInteract, DialogPosition.TeacherCheckAnswerStyle);
+        }
+    }
+    else
+    {
+        await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Требуется ввести оценку!", cancellationToken: cancellationToken, replyMarkup: ButtonBank.RateForAnswerButtons);
         return;
     }
-    teacher.CurrentAnswer.Comment = teacher.CurrentAnswer.Comment + "\nОрфография: " + update.Message.Text;
-    await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Введите комментарий о соответствии стиля текста:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
-    await teacher.SetPosition(dbInteract, DialogPosition.TeacherCheckAnswerStyle);
 }
 
 async Task ProcessingTeacherCheckAnswerStyle(TelegramLingvoBot.Teacher? teacher, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
 {
-    if (update.Message.Text.Equals(""))
+    if (int.TryParse(update.Message.Text, out int result))
     {
-        await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Требуется ввести комментарий!", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
+        if (result >= 1 && result <= 10)
+        {
+            teacher.CurrentAnswer.WritingStyleRate = result;
+            await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Общий комментарий:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
+            await teacher.SetPosition(dbInteract, DialogPosition.TeacherWorkCheckComment);
+        }
+    }
+    else
+    {
+        await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Требуется ввести оценку!", cancellationToken: cancellationToken, replyMarkup: ButtonBank.RateForAnswerButtons);
         return;
     }
-    teacher.CurrentAnswer.Comment = teacher.CurrentAnswer.Comment + "\nСтиль: " + update.Message.Text;
-    await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Оцените работу:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.RateForAnswerButtons);
-    await teacher.SetPosition(dbInteract, DialogPosition.TeacherWorkCheckRate);
 }
 
 async Task ProcessSendReportSelectWork(TelegramLingvoBot.User? user, ITelegramBotClient botClient, CancellationToken cancellationToken)
@@ -882,13 +879,10 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             }
             break;
         case DialogPosition.TeacherCheckAnswerEquivalence:
-            await ProcessingTeacherCheckAnswerEquivalence(teacher, botClient, update, cancellationToken);
+            await ProcessingTeacherCheckAnswerAccuracy(teacher, botClient, update, cancellationToken);
             break;
         case DialogPosition.TeacherCheckAnswerAdequacy:
             await ProcessingTeacherCheckAnswerAdequacy(teacher, botClient, update, cancellationToken);
-            break;
-        case DialogPosition.TeacherCheckAnswerDesign:
-            await ProcessingTeacherCheckAnswerDesign(teacher, botClient, update, cancellationToken);
             break;
         case DialogPosition.TeacherCheckAnswerGrammar:
             await ProcessingTeacherCheckAnswerGrammar(teacher, botClient, update, cancellationToken);
@@ -898,14 +892,6 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             break;
         case DialogPosition.TeacherCheckAnswerStyle:
             await ProcessingTeacherCheckAnswerStyle(teacher, botClient, update, cancellationToken);
-            break;
-        case DialogPosition.TeacherWorkCheckRate:
-            teacherMainMenuButtons = ButtonBank.TeacherMainMenuButtonsWithWithdrawalOfFunds;
-            if (teacher.Balance < 100)
-            {
-                teacherMainMenuButtons = ButtonBank.TeacherMainMenuButtonsWithoutWithdrawalOfFunds;
-            }
-            await ProcessingTeacherWorkCheckRate(teacher, botClient, update, cancellationToken);
             break;
         case DialogPosition.TeacherWorkCheckComment:
             teacherMainMenuButtons = ButtonBank.TeacherMainMenuButtonsWithWithdrawalOfFunds;
