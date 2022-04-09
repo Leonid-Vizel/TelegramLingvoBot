@@ -1033,7 +1033,7 @@ namespace TelegramLingvoBot
                     await SetUTF8Async(connection);
                     using (MySqlCommand command = connection.CreateCommand())
                     {
-                        command.CommandText = $"SELECT AVG(Rate) AS RateAVG FROM answers WHERE UserId={userId}";
+                        command.CommandText = $"SELECT avg((AccuracyRate +AdequacyRate + GrammarRate + SpellingRate + WritingStyleRate)/ 5) FROM answers WHERE UserId ={userId}";
                         result = await command.ExecuteScalarAsync();
                         rating = (result == null || result == DBNull.Value) ? 0 : (decimal)result;
                     }
@@ -1044,7 +1044,7 @@ namespace TelegramLingvoBot
                 await SetUTF8Async(connectionInput);
                 using (MySqlCommand command = connectionInput.CreateCommand())
                 {
-                    command.CommandText = $"SELECT AVG(Rate) AS RateAVG FROM answers WHERE UserId={userId}";
+                    command.CommandText = $"SELECT avg((AccuracyRate +AdequacyRate + GrammarRate + SpellingRate + WritingStyleRate)/ 5) FROM answers WHERE UserId ={userId}";
                     result = await command.ExecuteScalarAsync();
                     rating = (result == null || result == DBNull.Value) ? 0 : (decimal)result;
                 }
