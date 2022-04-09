@@ -515,17 +515,15 @@ namespace TelegramLingvoBot
                             {
                                 while (await reader.ReadAsync())
                                 {
-                                    object rateRead = reader.GetValue(4);
-                                    object commentRead = reader.GetValue(5);
-                                    object teacherRead = reader.GetValue(6);
-                                    int? rate = rateRead == DBNull.Value ? null : (int)rateRead;
+                                    object commentRead = reader.GetValue(4);
+                                    object teacherRead = reader.GetValue(5);
                                     string? comment = commentRead == DBNull.Value ? null : (string)commentRead;
                                     long? teacherId = teacherRead == DBNull.Value ? null : (long)teacherRead;
                                     answers.Add(new Answer(reader.GetInt64(0),
                                             reader.GetInt64(1),
                                             new Question(reader.GetInt32(2)),
                                             reader.GetTextReader(3).ReadToEnd(),
-                                            rate, comment, teacherId));
+                                            comment, teacherId));
                                 }
                             }
                         }
@@ -582,17 +580,15 @@ namespace TelegramLingvoBot
                         {
                             while (await reader.ReadAsync())
                             {
-                                object rateRead = reader.GetValue(4);
-                                object commentRead = reader.GetValue(5);
-                                object teacherRead = reader.GetValue(6);
-                                int? rate = rateRead == DBNull.Value ? null : (int)rateRead;
+                                object commentRead = reader.GetValue(4);
+                                object teacherRead = reader.GetValue(5);
                                 string? comment = commentRead == DBNull.Value ? null : (string)commentRead;
                                 long? teacherId = teacherRead == DBNull.Value ? null : (long)teacherRead;
                                 answers.Add(new Answer(reader.GetInt64(0),
                                         reader.GetInt64(1),
                                         new Question(reader.GetInt32(2)),
                                         reader.GetTextReader(3).ReadToEnd(),
-                                        rate, comment, teacherId));
+                                        comment, teacherId));
                             }
                         }
                     }
@@ -654,7 +650,7 @@ namespace TelegramLingvoBot
                     await SetUTF8Async(connection);
                     using (MySqlCommand command = connection.CreateCommand())
                     {
-                        command.CommandText = $"INSERT INTO answers (UserId, QuestionId, Text, Rate, Comment, TeacherId) VALUES ({answer.UserId}, {answer.Question.Id}, '{answer.Text}', null, null, null);";
+                        command.CommandText = $"INSERT INTO answers (UserId, QuestionId, Text, Comment, TeacherId) VALUES ({answer.UserId}, {answer.Question.Id}, '{answer.Text}', null, null);";
                         await command.ExecuteNonQueryAsync();
                     }
                 }
@@ -664,7 +660,7 @@ namespace TelegramLingvoBot
                 await SetUTF8Async(connectionInput);
                 using (MySqlCommand command = connectionInput.CreateCommand())
                 {
-                    command.CommandText = $"INSERT INTO answers (UserId, QuestionId, Text, Rate, Comment, TeacherId) VALUES ({answer.UserId}, {answer.Question.Id}, '{answer.Text}', null, null, null);";
+                    command.CommandText = $"INSERT INTO answers (UserId, QuestionId, Text, Comment, TeacherId) VALUES ({answer.UserId}, {answer.Question.Id}, '{answer.Text}', null, null);";
                     await command.ExecuteNonQueryAsync();
                 }
             }
@@ -685,7 +681,7 @@ namespace TelegramLingvoBot
                     await SetUTF8Async(connection);
                     using (MySqlCommand command = connection.CreateCommand())
                     {
-                        command.CommandText = $"UPDATE answers SET Rate={work.Rate}, Comment='{work.Comment}', TeacherId={work.TeacherId} WHERE id={work.Id};";
+                        command.CommandText = $"UPDATE answers SET AccuracyRate={work.AccuracyRate}, AdequacyRate={work.AdequacyRate}, GrammarRate={work.GrammarRate}, SpellingRate={work.SpellingRate}, WritingStyleRate={work.WritingStyleRate}, Comment='{work.Comment}', TeacherId={work.TeacherId} WHERE id={work.Id};";
                         await command.ExecuteNonQueryAsync();
                     }
                 }
@@ -695,7 +691,7 @@ namespace TelegramLingvoBot
                 await SetUTF8Async(connectionInput);
                 using (MySqlCommand command = connectionInput.CreateCommand())
                 {
-                    command.CommandText = $"UPDATE answers SET Rate={work.Rate}, Comment='{work.Comment}', TeacherId={work.TeacherId} WHERE id={work.Id};";
+                    command.CommandText = $"UPDATE answers SET AccuracyRate={work.AccuracyRate}, AdequacyRate={work.AdequacyRate}, GrammarRate={work.GrammarRate}, SpellingRate={work.SpellingRate}, WritingStyleRate={work.WritingStyleRate}, Comment='{work.Comment}', TeacherId={work.TeacherId} WHERE id={work.Id};";
                     await command.ExecuteNonQueryAsync();
                 }
             }
@@ -749,7 +745,7 @@ namespace TelegramLingvoBot
                                 long userId = (long)userIdRead;
                                 int QuestionId = (int)QuestionIdRead;
                                 string textOfUser = (string)textOfUserRead;
-                                answers.Add(new Answer(id, userId, new Question(QuestionId), textOfUser, null, null, null));
+                                answers.Add(new Answer(id, userId, new Question(QuestionId), textOfUser, null, null));
                             }
                             else
                             {
@@ -819,7 +815,7 @@ namespace TelegramLingvoBot
                             long userId = (long)userIdRead;
                             int QuestionId = (int)QuestionIdRead;
                             string textOfUser = (string)textOfUserRead;
-                            answer = new Answer(id, userId, new Question(QuestionId), textOfUser, null, null, null);
+                            answer = new Answer(id, userId, new Question(QuestionId), textOfUser, null, null);
                         }
                         else
                         {
@@ -887,17 +883,32 @@ namespace TelegramLingvoBot
                             if (reader.HasRows)
                             {
                                 await reader.ReadAsync();
-                                object rateRead = reader.GetValue(4);
-                                object commentRead = reader.GetValue(5);
-                                object teacherRead = reader.GetValue(6);
-                                int? rate = rateRead == DBNull.Value ? null : (int)rateRead;
+                                object commentRead = reader.GetValue(4);
+                                object teacherRead = reader.GetValue(5);
+                                object checkGrammarByModuleRead = reader.GetValue(6);
+                                object accuracyRateRead = reader.GetValue(7);
+                                object adequacyRateRead = reader.GetValue(8);
+                                object grammarRateRead = reader.GetValue(9);
+                                object spellingRateRead = reader.GetValue(10);
+                                object writingStyleRateRead = reader.GetValue(11);
                                 string? comment = commentRead == DBNull.Value ? null : (string)commentRead;
                                 long? teacherId = teacherRead == DBNull.Value ? null : (long)teacherRead;
+                                string? checkGrammarByModule = commentRead == DBNull.Value ? null : (string)commentRead;
+                                int? accuracyRate = accuracyRateRead == DBNull.Value ? null : (int)accuracyRateRead;
+                                int? adequacyRate = adequacyRateRead == DBNull.Value ? null : (int)adequacyRateRead;
+                                int? grammarRate = grammarRateRead == DBNull.Value ? null : (int)grammarRateRead;
+                                int? spellingRate = spellingRateRead == DBNull.Value ? null : (int)spellingRateRead;
+                                int? writingStyle = writingStyleRateRead == DBNull.Value ? null : (int)writingStyleRateRead;
                                 answer = new Answer(reader.GetInt64(0),
                                         reader.GetInt64(1),
                                         new Question(reader.GetInt32(2)),
                                         reader.GetTextReader(3).ReadToEnd(),
-                                        rate, comment, teacherId);
+                                        comment, teacherId);
+                                answer.AccuracyRate = accuracyRate;
+                                answer.AdequacyRate = adequacyRate;
+                                answer.GrammarRate = grammarRate;
+                                answer.SpellingRate = spellingRate;
+                                answer.WritingStyleRate = writingStyle;
                             }
                             else
                             {
@@ -951,17 +962,15 @@ namespace TelegramLingvoBot
                         if (reader.HasRows)
                         {
                             await reader.ReadAsync();
-                            object rateRead = reader.GetValue(4);
-                            object commentRead = reader.GetValue(5);
-                            object teacherRead = reader.GetValue(6);
-                            int? rate = rateRead == DBNull.Value ? null : (int)rateRead;
+                            object commentRead = reader.GetValue(4);
+                            object teacherRead = reader.GetValue(5);
                             string? comment = commentRead == DBNull.Value ? null : (string)commentRead;
                             long? teacherId = teacherRead == DBNull.Value ? null : (long)teacherRead;
                             answer = new Answer(reader.GetInt64(0),
                                     reader.GetInt64(1),
                                     new Question(reader.GetInt32(2)),
                                     reader.GetTextReader(3).ReadToEnd(),
-                                    rate, comment, teacherId);
+                                    comment, teacherId);
                         }
                         else
                         {

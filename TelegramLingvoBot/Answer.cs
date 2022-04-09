@@ -22,10 +22,6 @@
         /// </summary>
         public string Text { get; set; }
         /// <summary>
-        /// Оценка работы в баллах или null если не проверено
-        /// </summary>
-        public int? Rate { get; set; }
-        /// <summary>
         /// Комментарий от учителя или null если не проверено
         /// </summary>
         public string? Comment { get; set; }
@@ -33,6 +29,11 @@
         /// Идетификатор учителя, проверившего работу или null если не проверено
         /// </summary>
         public long? TeacherId { get; set; }
+        public int? WritingStyleRate { get; set; }
+        public int? SpellingRate { get; set; }
+        public int? GrammarRate { get; set; }
+        public int? AdequacyRate { get; set; }
+        public int? AccuracyRate { get; set; }
 
         /// <summary>
         /// Основной конструктор класса
@@ -44,13 +45,12 @@
         /// <param name="rate">Оценка работы в баллах или null если не проверено</param>
         /// <param name="comment">Комментарий от учителя или null если не проверено</param>
         /// <param name="teacherId">Идетификатор учителя, проверившего работу или null если не проверено</param>
-        public Answer(long id, long userId, Question question, string text, int? rate, string? comment, long? teacherId)
+        public Answer(long id, long userId, Question question, string text, string? comment, long? teacherId)
         {
             Id = id;
             UserId = userId;
             Question = question;
             Text = text;
-            Rate = rate;
             Comment = comment;
             TeacherId = teacherId;
         }

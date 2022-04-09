@@ -129,7 +129,7 @@ async Task ProcessAllUserWorks(TelegramLingvoBot.User? user, ITelegramBotClient 
         {
             foreach (Answer answer in answersOfUser)
             {
-                string checkedString = answer.Rate == null ? "Не проверен" : "Проверен";
+                string checkedString = answer.AccuracyRate == null ? "Не проверен" : "Проверен";
                 worksBuilder.AppendLine($"{answer.Id}) Перевод текста({answer.Question.Theme.Name}) - {checkedString}");
             }
             await user.SetPosition(dbInteract, DialogPosition.ChooseWorkId, connection);
@@ -234,7 +234,7 @@ async Task ProcessingUserChooseWorkId(TelegramLingvoBot.User? user, ITelegramBot
             else
             {
                 StringBuilder builder = new StringBuilder($"Работа #{answer.Id}\nТема: {answer.Question.Theme.Name}\nТекст: {answer.Question.Text}\n");
-                if (answer.Rate == null)
+                if (answer.AccuracyRate == null)
                 {
                     builder.AppendLine("Работа проверена: Нет");
                 }
@@ -243,9 +243,10 @@ async Task ProcessingUserChooseWorkId(TelegramLingvoBot.User? user, ITelegramBot
                     builder.AppendLine("Работа проверена: Да");
                 }
                 builder.AppendLine($"Текст работы:\n{answer.Text}");
-                if (answer.Rate != null)
+                if (answer.AccuracyRate != null)
                 {
-                    builder.AppendLine($"Оценка эксперта: {answer.Rate}/10{answer.Comment}");
+                    builder.AppendLine($"");
+                    builder.AppendLine($"Оценка эксперта: {(answer.AccuracyRate + answer.AdequacyRate + answer.GrammarRate + answer.SpellingRate + answer.WritingStyleRate)/5}/10{answer.Comment}");
                 }
                 await botClient.SendTextMessageAsync(chatId: user.Id, text: builder.ToString(), cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
                 await user.SetPosition(dbInteract, DialogPosition.WorkShown, connection);
@@ -342,7 +343,7 @@ async Task ProcessingTeacherWorkCheckRate(TelegramLingvoBot.Teacher? teacher, IT
         {
             using (var connection = dbInteract.GetConnection())
             {
-                teacher.CurrentAnswer.Rate = rate;
+                teacher.CurrentAnswer.AccuracyRate = rate;
                 await teacher.SetPosition(dbInteract, DialogPosition.TeacherWorkCheckComment);
                 await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Введите комментарий:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
                 teacher.SetPosition(dbInteract, DialogPosition.TeacherWorkCheckComment);
