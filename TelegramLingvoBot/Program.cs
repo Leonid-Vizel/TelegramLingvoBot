@@ -1012,7 +1012,23 @@ async void ResetAllUsers(object? sender, ElapsedEventArgs e)
 
 void WorkWithModel()
 {
-    Process.Start($"{Environment.CurrentDirectory}\\model\\python script.py");
+    ProcessStartInfo startInfo = new ProcessStartInfo("python");
+    Process process = new Process();
+
+    string directory = $"{Environment.CurrentDirectory}\\model\\";
+    string script = "script.py";
+
+    startInfo.WorkingDirectory = directory;
+    startInfo.Arguments = script;
+    startInfo.UseShellExecute = false;
+    startInfo.CreateNoWindow = true;
+    startInfo.RedirectStandardError = true;
+    startInfo.RedirectStandardOutput = true;
+
+    process.StartInfo = startInfo;
+    process.Start();
+
+    //Process.Start("cmd.exe", $"python {Environment.CurrentDirectory}\\model\\script.py");
     bool flag = true;
     while (flag)
     {
@@ -1020,13 +1036,19 @@ void WorkWithModel()
         {
             if (answerBagForModel.TryTake(out Answer answer))
             {
+                Thread.Sleep(500);
                 System.IO.File.WriteAllText("model\\text.txt", answer.Text);
                 while (!System.IO.File.Exists("model\\prediction.txt")) { }
                 Thread.Sleep(500);
-                answer.CheckedByModel = System.IO.File.ReadAllText("model\\prediction.txt");
-                System.IO.File.Delete("model\\prediction.txt");
-                dbInteract.SetCheckedByModel(answer).Wait();
-                Console.WriteLine($"CHECKED! OUTPUT: {answer.CheckedByModel}");
+                string read = System.IO.File.ReadAllText("model\\prediction.txt");
+                Console.WriteLine(read);
+                if (!read.Equals("He *is* driving a car."))
+                {
+                    answer.CheckedByModel = read;
+                    System.IO.File.Delete("model\\prediction.txt");
+                    dbInteract.SetCheckedByModel(answer).Wait();
+                    Console.WriteLine($"CHECKED! OUTPUT: {answer.CheckedByModel}");
+                }
             }
         }
     }
