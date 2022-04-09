@@ -45,12 +45,17 @@
         /// <param name="rate">Оценка работы в баллах или null если не проверено</param>
         /// <param name="comment">Комментарий от учителя или null если не проверено</param>
         /// <param name="teacherId">Идетификатор учителя, проверившего работу или null если не проверено</param>
-        public Answer(long id, long userId, Question question, string text, string? comment, long? teacherId)
+        public Answer(long id, long userId, Question question, string text, int? accuracyRate, int? writingStyleRate, int? spellingRate, int? grammarRate, int? adequacyRatestring, string? comment, long? teacherId)
         {
             Id = id;
             UserId = userId;
             Question = question;
             Text = text;
+            AccuracyRate = accuracyRate;
+            WritingStyleRate = writingStyleRate;
+            SpellingRate = spellingRate;
+            GrammarRate = grammarRate;
+            AdequacyRate = adequacyRatestring;
             Comment = comment;
             TeacherId = teacherId;
         }

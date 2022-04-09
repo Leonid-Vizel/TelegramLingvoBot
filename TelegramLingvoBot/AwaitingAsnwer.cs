@@ -52,6 +52,6 @@ namespace TelegramLingvoBot
             ListStorage.Remove(this);
         }
 
-        public Answer ToAnswer(string answer) => new Answer(0, User.Id, Question, answer, null, null);
+        public Answer ToAnswer(string answer) => new Answer(0, User.Id, Question, answer, null, null, null, null, null, null, null);
     }
 }
