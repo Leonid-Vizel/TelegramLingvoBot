@@ -38,10 +38,11 @@ def text_correction(text: List[str] = None) -> List[str]:
         with_value  = re.findall(r'<[cda].*? edit=\'.*?\'', sent)  
         num_val = len(before_value)
         values = ['']*num_val
-        for i in range(num_val):
-            values[i] = '*' + with_value[i][len(before_value[i]):-1] + '*'
-        for i in range(num_val):
-            sent = re.sub(r'<[cda].*?>.*?</[cda]>',values[i], sent, 1)
+        if len(with_value) > 0 and len(before_value) > 0 and len(values) > 0:
+            for i in range(num_val):
+                values[i] = '*' + with_value[i][len(before_value[i]):-1] + '*'
+            for i in range(num_val):
+                sent = re.sub(r'<[cda].*?>.*?</[cda]>',values[i], sent, 1)
         corrected.append(sent)
     corrected_text = " ".join(corrected)
     return corrected_text
