@@ -78,7 +78,7 @@ using (var connection = dbInteract.GetConnection())
         await user.SetPosition(dbInteract, DialogPosition.MainMenu, connection);
     }
 
-    foreach (TelegramLingvoBot.Teacher teacher in Teachers.Where(x => (int)x.Position >= 12 && (int)x.Position <= 19))
+    foreach (TelegramLingvoBot.Teacher teacher in Teachers.Where(x => (int)x.Position >= 12 && (int)x.Position <= 17))
     {
         if (teacher.CurrentAnswer != null)
         {
@@ -774,19 +774,25 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
     {
         if (user != null)
         {
-            await user.SetPosition(dbInteract, DialogPosition.MainMenu);
-            await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+            if (user.Position != DialogPosition.WaitingForResponce)
+            {
+                await user.SetPosition(dbInteract, DialogPosition.MainMenu);
+                await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+            }
         }
         else
         {
-            await teacher.SetPosition(dbInteract, DialogPosition.TeacherMainMenu);
-            if (teacher.Balance < 100)
+            if ((int)teacher.Position < 12 || (int)teacher.Position > 17)
             {
-                await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.TeacherMainMenuButtonsWithoutWithdrawalOfFunds);
-            }
-            else
-            {
-                await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.TeacherMainMenuButtonsWithWithdrawalOfFunds);
+                await teacher.SetPosition(dbInteract, DialogPosition.TeacherMainMenu);
+                if (teacher.Balance < 100)
+                {
+                    await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.TeacherMainMenuButtonsWithoutWithdrawalOfFunds);
+                }
+                else
+                {
+                    await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.TeacherMainMenuButtonsWithWithdrawalOfFunds);
+                }
             }
         }
         return;
@@ -1012,21 +1018,21 @@ async void ResetAllUsers(object? sender, ElapsedEventArgs e)
 
 void WorkWithModel()
 {
-    ProcessStartInfo startInfo = new ProcessStartInfo("python");
-    Process process = new Process();
+    //ProcessStartInfo startInfo = new ProcessStartInfo("python");
+    //Process process = new Process();
 
-    string directory = $"{Environment.CurrentDirectory}\\model\\";
-    string script = "script.py";
+    //string directory = $"{Environment.CurrentDirectory}\\model\\";
+    //string script = "script.py";
 
-    startInfo.WorkingDirectory = directory;
-    startInfo.Arguments = script;
-    startInfo.UseShellExecute = false;
-    startInfo.CreateNoWindow = true;
-    startInfo.RedirectStandardError = true;
-    startInfo.RedirectStandardOutput = true;
+    //startInfo.WorkingDirectory = directory;
+    //startInfo.Arguments = script;
+    //startInfo.UseShellExecute = false;
+    //startInfo.CreateNoWindow = true;
+    //startInfo.RedirectStandardError = true;
+    //startInfo.RedirectStandardOutput = true;
 
-    process.StartInfo = startInfo;
-    process.Start();
+    //process.StartInfo = startInfo;
+    //process.Start();
 
     //Process.Start("cmd.exe", $"python {Environment.CurrentDirectory}\\model\\script.py");
     bool flag = true;
