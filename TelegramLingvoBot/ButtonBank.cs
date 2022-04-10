@@ -58,8 +58,8 @@ namespace TelegramLingvoBot
                     {
                         new List<KeyboardButton>
                         {
-                            new KeyboardButton("Меню любимых тем"),
-                            new KeyboardButton("Назад")
+                            new KeyboardButton("Любимые темы 💚"),
+                            new KeyboardButton("Назад ⏪")
                         }
                     });
                 keyboard.ResizeKeyboard = true;
@@ -80,7 +80,7 @@ namespace TelegramLingvoBot
                         {
                             new KeyboardButton("Добавить"),
                             new KeyboardButton("Убрать"),
-                            new KeyboardButton("Назад")
+                            new KeyboardButton("Назад ⏪")
                         }
                     });
                 keyboard.ResizeKeyboard = true;
@@ -100,7 +100,7 @@ namespace TelegramLingvoBot
                         new List<KeyboardButton>
                         {
                             new KeyboardButton("Добавить"),
-                            new KeyboardButton("Назад")
+                            new KeyboardButton("Назад ⏪")
                         }
                     });
                 keyboard.ResizeKeyboard = true;
@@ -120,7 +120,7 @@ namespace TelegramLingvoBot
                         new List<KeyboardButton>
                         {
                             new KeyboardButton("Убрать"),
-                            new KeyboardButton("Назад")
+                            new KeyboardButton("Назад ⏪")
                         }
                     });
                 keyboard.ResizeKeyboard = true;
@@ -160,7 +160,7 @@ namespace TelegramLingvoBot
                     {
                         new List<KeyboardButton>
                         {
-                            new KeyboardButton("Назад")
+                            new KeyboardButton("Назад ⏪")
                         }
                     });
                 keyboard.ResizeKeyboard = true;
@@ -183,7 +183,7 @@ namespace TelegramLingvoBot
                             new KeyboardButton("10"),
                             new KeyboardButton("50"),
                             new KeyboardButton("100"),
-                            new KeyboardButton("Назад")
+                            new KeyboardButton("Назад ⏪")
                         }
                     });
                 keyboard.ResizeKeyboard = true;
@@ -204,7 +204,7 @@ namespace TelegramLingvoBot
                         new List<KeyboardButton>
                         {
                             new KeyboardButton("Назад к моим работам"),
-                            new KeyboardButton("Назад в главное меню"),
+                            new KeyboardButton("Главное меню ☝🏻"),
                         }
                     });
                 keyboard.ResizeKeyboard = true;
@@ -224,8 +224,8 @@ namespace TelegramLingvoBot
                     {
                         new List<KeyboardButton>
                         {
-                            new KeyboardButton("Отправить жалобу"),
-                            new KeyboardButton("Назад")
+                            new KeyboardButton("Пожаловаться ⚠️"),
+                            new KeyboardButton("Назад ⏪")
                         }
                     });
                 keyboard.ResizeKeyboard = true;
@@ -246,7 +246,7 @@ namespace TelegramLingvoBot
                         new List<KeyboardButton>
                         {
                             new KeyboardButton("Случайная тема"),
-                            new KeyboardButton("Назад")
+                            new KeyboardButton("Назад ⏪")
                         }
                     });
                 keyboard.ResizeKeyboard = true;
