@@ -50,10 +50,5 @@
 * [User.cs](https://github.com/Leonid-Vizel/TelegramLingvoBot/blob/master/TelegramLingvoBot/User.cs) - Файл с классами проверяющих и пользователей
 * [TelegramLingvoBot/model](TelegramLingvoBot/model/) - модель для проверки грамматики
 
-## Example
-### About demo
-![alt text](readme_data/about.gif)
-
-
-### Prediction demo
-![alt text](readme_data/prediction.gif)
+## Демо
+<iframe width="560" height="315" src="https://www.youtube.com/embed/mboeaEYdNSA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
