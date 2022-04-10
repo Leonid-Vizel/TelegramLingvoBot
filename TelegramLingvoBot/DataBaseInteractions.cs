@@ -523,7 +523,6 @@ namespace TelegramLingvoBot
                                     object styleRead = reader.GetValue(11);
                                     string? comment = commentRead == DBNull.Value ? null : (string)commentRead;
                                     long? teacherId = teacherRead == DBNull.Value ? null : (long)teacherRead;
-
                                     int? accuracyRate = accuracyRead == DBNull.Value ? null : (int)accuracyRead;
                                     int? adequacyRate = adequacyRead == DBNull.Value ? null : (int)adequacyRead;
                                     int? grammerRate = grammarRead == DBNull.Value ? null : (int)grammarRead;
@@ -757,8 +756,10 @@ namespace TelegramLingvoBot
                         {
                             if (reader.HasRows)
                             {
+                                await reader.ReadAsync();
                                 object commentRead = reader.GetValue(4);
                                 object teacherRead = reader.GetValue(5);
+                                object checkRead = reader.GetValue(6);
                                 object accuracyRead = reader.GetValue(7);
                                 object adequacyRead = reader.GetValue(8);
                                 object grammarRead = reader.GetValue(9);
@@ -766,7 +767,7 @@ namespace TelegramLingvoBot
                                 object styleRead = reader.GetValue(11);
                                 string? comment = commentRead == DBNull.Value ? null : (string)commentRead;
                                 long? teacherId = teacherRead == DBNull.Value ? null : (long)teacherRead;
-
+                                string? checkByModel = checkRead == DBNull.Value ? null : ((TextReader)checkRead).ReadToEnd();
                                 int? accuracyRate = accuracyRead == DBNull.Value ? null : (int)accuracyRead;
                                 int? adequacyRate = adequacyRead == DBNull.Value ? null : (int)adequacyRead;
                                 int? grammerRate = grammarRead == DBNull.Value ? null : (int)grammarRead;
@@ -776,7 +777,10 @@ namespace TelegramLingvoBot
                                         reader.GetInt64(1),
                                         new Question(reader.GetInt32(2)),
                                         reader.GetTextReader(3).ReadToEnd(),
-                                        accuracyRate, styleRate, spellingRate, grammerRate, adequacyRate, comment, teacherId));
+                                        accuracyRate, styleRate, spellingRate, grammerRate, adequacyRate, comment, teacherId)
+                                        {
+                                            CheckedByModel = checkByModel
+                                        });
                             }
                             else
                             {
@@ -830,6 +834,24 @@ namespace TelegramLingvoBot
             else
             {
                 await SetUTF8Async(connectionInput);
+                List<long> ids = new List<long>();
+                using (MySqlCommand command = connectionInput.CreateCommand())
+                {
+                    command.CommandText = $"SELECT CurrentAnswer FROM teachers WHERE CurrentAnswer is not null";
+                    using (MySqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                ids.Add(reader.GetInt64(0));
+                            }
+                        }
+                    }
+                }
+
+                List<Answer> answers = new List<Answer>();
+
                 using (MySqlCommand command = connectionInput.CreateCommand())
                 {
                     command.CommandText = $"SELECT * FROM answers WHERE AccuracyRate is null";
@@ -840,6 +862,7 @@ namespace TelegramLingvoBot
                             await reader.ReadAsync();
                             object commentRead = reader.GetValue(4);
                             object teacherRead = reader.GetValue(5);
+                            object checkRead = reader.GetValue(6);
                             object accuracyRead = reader.GetValue(7);
                             object adequacyRead = reader.GetValue(8);
                             object grammarRead = reader.GetValue(9);
@@ -847,19 +870,20 @@ namespace TelegramLingvoBot
                             object styleRead = reader.GetValue(11);
                             string? comment = commentRead == DBNull.Value ? null : (string)commentRead;
                             long? teacherId = teacherRead == DBNull.Value ? null : (long)teacherRead;
-
+                            string? checkByModel = checkRead == DBNull.Value ? null : ((TextReader)checkRead).ReadToEnd();
                             int? accuracyRate = accuracyRead == DBNull.Value ? null : (int)accuracyRead;
                             int? adequacyRate = adequacyRead == DBNull.Value ? null : (int)adequacyRead;
                             int? grammerRate = grammarRead == DBNull.Value ? null : (int)grammarRead;
                             int? spellingRate = spellingRead == DBNull.Value ? null : (int)spellingRead;
                             int? styleRate = styleRead == DBNull.Value ? null : (int)styleRead;
-
-
-                            answer = new Answer(reader.GetInt64(0),
+                            answers.Add(new Answer(reader.GetInt64(0),
                                     reader.GetInt64(1),
                                     new Question(reader.GetInt32(2)),
                                     reader.GetTextReader(3).ReadToEnd(),
-                                    accuracyRate, styleRate, spellingRate, grammerRate, adequacyRate, comment, teacherId);
+                                    accuracyRate, styleRate, spellingRate, grammerRate, adequacyRate, comment, teacherId)
+                            {
+                                CheckedByModel = checkByModel
+                            });
                         }
                         else
                         {
@@ -867,6 +891,14 @@ namespace TelegramLingvoBot
                         }
                     }
                 }
+
+                answer = answers.Where(x => !ids.Contains(x.Id)).FirstOrDefault();
+
+                if (answer == null)
+                {
+                    return null;
+                }
+
                 using (MySqlCommand command = connectionInput.CreateCommand())
                 {
                     command.CommandText = $"SELECT ThemeId,Text FROM questions WHERE id = {answer.Question.Id};";
@@ -937,7 +969,7 @@ namespace TelegramLingvoBot
                                 object writingStyleRateRead = reader.GetValue(11);
                                 string? comment = commentRead == DBNull.Value ? null : (string)commentRead;
                                 long? teacherId = teacherRead == DBNull.Value ? null : (long)teacherRead;
-                                string? checkGrammarByModule = commentRead == DBNull.Value ? null : (string)commentRead;
+                                string? checkGrammarByModule = checkGrammarByModuleRead == DBNull.Value ? null : ((TextReader)checkGrammarByModuleRead).ReadToEnd();
                                 int? accuracyRate = accuracyRateRead == DBNull.Value ? null : (int)accuracyRateRead;
                                 int? adequacyRate = adequacyRateRead == DBNull.Value ? null : (int)adequacyRateRead;
                                 int? grammarRate = grammarRateRead == DBNull.Value ? null : (int)grammarRateRead;
@@ -949,6 +981,7 @@ namespace TelegramLingvoBot
                                         reader.GetTextReader(3).ReadToEnd(),
                                         accuracyRate, writingStyleRate, spellingRate, grammarRate, adequacyRate,
                                         comment, teacherId);
+                                answer.CheckedByModel = checkGrammarByModule;
                             }
                             else
                             {
@@ -1012,7 +1045,7 @@ namespace TelegramLingvoBot
                             object writingStyleRateRead = reader.GetValue(11);
                             string? comment = commentRead == DBNull.Value ? null : (string)commentRead;
                             long? teacherId = teacherRead == DBNull.Value ? null : (long)teacherRead;
-                            string? checkGrammarByModule = commentRead == DBNull.Value ? null : (string)commentRead;
+                            string? checkGrammarByModule = checkGrammarByModuleRead == DBNull.Value ? null : ((TextReader)checkGrammarByModuleRead).ReadToEnd();
                             int? accuracyRate = accuracyRateRead == DBNull.Value ? null : (int)accuracyRateRead;
                             int? adequacyRate = adequacyRateRead == DBNull.Value ? null : (int)adequacyRateRead;
                             int? grammarRate = grammarRateRead == DBNull.Value ? null : (int)grammarRateRead;
@@ -1024,6 +1057,7 @@ namespace TelegramLingvoBot
                                     reader.GetTextReader(3).ReadToEnd(),
                                     accuracyRate, writingStyleRate, spellingRate, grammarRate, adequacyRate,
                                     comment, teacherId);
+                            answer.CheckedByModel = checkGrammarByModule;
                         }
                         else
                         {

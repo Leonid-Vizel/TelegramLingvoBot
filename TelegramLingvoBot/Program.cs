@@ -83,13 +83,17 @@ using (var connection = dbInteract.GetConnection())
         await user.SetPosition(dbInteract, DialogPosition.MainMenu, connection);
     }
 
-    foreach (TelegramLingvoBot.Teacher teacher in Teachers.Where(x => (int)x.Position >= 12 && (int)x.Position <= 17))
+    foreach (TelegramLingvoBot.Teacher teacher in Teachers.Where(x => (int)x.Position >= 13 && (int)x.Position <= 18))
     {
         if (teacher.CurrentAnswer != null)
         {
             teacher.CurrentAnswer.TeacherId = teacher.Id;
             await teacher.SetPosition(dbInteract, DialogPosition.TeacherCheckAnswerEquivalence, connection);
             await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Есть работа на проверку!\n*Исходный*: {teacher.CurrentAnswer.Question.Text}\n*Перевод ученика*: {teacher.CurrentAnswer.Text}", cancellationToken: cts.Token, parseMode: ParseMode);
+            if (teacher.CurrentAnswer.CheckedByModel != null)
+            {
+                await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"*Автокоррекция грамматики:*\n{teacher.CurrentAnswer.CheckedByModel}", cancellationToken: cts.Token, parseMode: ParseMode);
+            }
             await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Оцените точность перевода: ", cancellationToken: cts.Token, replyMarkup: ButtonBank.RateForAnswerButtons);
         }
         else
@@ -335,6 +339,10 @@ async Task ProcessingTeacherMainMenuCheckAnswer(TelegramLingvoBot.Teacher? teach
             await dbInteract.UpdateTeacherAnswerId(teacher.Id, teacher.CurrentAnswer.Id, connection);
             await teacher.SetPosition(dbInteract, DialogPosition.TeacherCheckAnswerEquivalence, connection);
             await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Есть работа на проверку!\nПереводы: {answer.Question.Text}\nТекст: {answer.Text}", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons);
+            if (teacher.CurrentAnswer.CheckedByModel != null)
+            {
+                await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"*Автокоррекция грамматики:*\n{teacher.CurrentAnswer.CheckedByModel}", cancellationToken: cts.Token, parseMode: ParseMode);
+            }
             await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Оцените точность перевода: ", cancellationToken: cancellationToken, replyMarkup: ButtonBank.RateForAnswerButtons);
         }
     }
@@ -806,7 +814,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
         }
         else
         {
-            if ((int)teacher.Position < 12 || (int)teacher.Position > 17)
+            if ((int)teacher.Position < 13 || (int)teacher.Position > 18 )
             {
                 await teacher.SetPosition(dbInteract, DialogPosition.TeacherMainMenu);
                 if (teacher.Balance < 100)
