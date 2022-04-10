@@ -39,7 +39,7 @@
 4. Go to `http://localhost:8080/`
 
 ## Исходный код
-* [TelegramLingvoBot/model/](TelegramLingvoBot/TelegramLingvoBot/model/) contains my data and model research
+* [TelegramLingvoBot/model](TelegramLingvoBot/model/) contains my data and model research
 * [app.py](app.py) contains server logic
 * [model/model.py](model/model.py) class of model
 * [data/data.txt](data/data.txt) - initial data
