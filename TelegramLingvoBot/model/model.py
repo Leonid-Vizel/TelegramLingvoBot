@@ -3,7 +3,7 @@ from gramformer import Gramformer
 from spacy.errors import models_warning
 import torch
 from transformers.models.auto.configuration_auto import model_type_to_module_name
-from utils import sent_splitter, get_correction_highlight, text_correction
+from utils import sent_splitter, get_corrected_text, text_correction
 
 class GFModel():
     def __init__(self):
@@ -15,5 +15,5 @@ class GFModel():
 
     def get_prediction(self, text: str = None) -> str:
         text = sent_splitter(text)
-        highlight_sents = get_correction_highlight(self.model, text)
-        return text_correction(highlight_sents)
+        sents = get_corrected_text(self.model, text)
+        return sents

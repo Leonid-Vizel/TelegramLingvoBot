@@ -26,6 +26,19 @@ def get_correction_highlight(model, text: str = None) -> List[str]:
             highlight_sents.append(highlight_sentence)
     return highlight_sents
 
+def get_corrected_text(model, text: str = None) -> List[str]:
+
+    """Get corrected text"""
+
+    assert text != None, "no text to highlight!"
+    corrected = list()
+    for influent_sentence in text:
+        corrected_sentences = model.correct(influent_sentence, max_candidates=1)
+        for corrected_sentence in corrected_sentences:
+            corrected.append(corrected_sentence)
+    corrected_text = " ".join(corrected)
+    return corrected_text
+
 def text_correction(text: List[str] = None) -> List[str]:
         
     """Incorrect parts in bold"""
@@ -34,16 +47,15 @@ def text_correction(text: List[str] = None) -> List[str]:
 
     corrected = list()
     for sent in text:
-        before_value  = re.findall(r'<[cda].*? edit=\'',sent)
-        with_value  = re.findall(r'<[cda].*? edit=\'.*?\'', sent)  
-        num_val = len(before_value)
-        values = ['']*num_val
-        if len(with_value) > 0 and len(before_value) > 0 and len(values) > 0:
-            for i in range(num_val):
-                values[i] = '*' + with_value[i][len(before_value[i]):-1] + '*'
-            for i in range(num_val):
-                sent = re.sub(r'<[cda].*?>.*?</[cda]>',values[i], sent, 1)
-        corrected.append(sent)
+    #     before_value  = re.findall(r'<[a-z].*? edit=\'',sent)
+    #     with_value  = re.findall(r'<[a-z].*? edit=\'.*?\'', sent)
+    #     num_val = len(before_value)
+    #     values = ['']*num_val
+    #     for i in range(num_val):
+    #         values[i] = '**' + with_value[i][len(before_value[i]):-1] + '**'
+    #     for i in range(num_val):
+    #         sent = re.sub(r'<[a-z].*?>.*?</[a-z]>',values[i], sent, 1)
+         corrected.append(sent)
     corrected_text = " ".join(corrected)
     return corrected_text
 
@@ -51,4 +63,3 @@ def save_prediction(text: str):
     text_file = open("prediction.txt", "w")
     text_file.write(text)
     text_file.close()
-
