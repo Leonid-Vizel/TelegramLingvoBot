@@ -32,11 +32,6 @@
 - [ ] Админ панель 
 - [ ] Автоматизация выплат
 
-## Как запустить:
-1. Install and run Docker
-2. Build Docker image using `docker build . -t [IMAGE NAME]`
-3. Run Docker container using `docker run --rm -it -p 8080:8080 [IMAGE NAME]`
-4. Go to `http://localhost:8080/`
 
 ## Исходный код
 * [Answer.cs](https://github.com/Leonid-Vizel/TelegramLingvoBot/blob/master/TelegramLingvoBot/Answer.cs) - Ответы пользователя.
