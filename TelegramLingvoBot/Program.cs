@@ -793,12 +793,12 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
                 user = new TelegramLingvoBot.User(chatId);
                 Users.Add(user);
                 await dbInteract.AddUser(user);
-                await botClient.SendTextMessageAsync(chatId: chatId, text: FileTXTInteractions.ReadTXT("textAfterRegistration"), cancellationToken: cancellationToken);
+                await botClient.SendTextMessageAsync(chatId: chatId, text: FileTXTInteractions.ReadTXT("textAfterRegistration"), cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons, parseMode: ParseMode);
                 return;
             }
             else
             {
-                await botClient.SendTextMessageAsync(chatId: chatId, text: FileTXTInteractions.ReadTXT("textFirstMessage"), cancellationToken: cancellationToken, replyMarkup: ButtonBank.RegisterButton);
+                await botClient.SendTextMessageAsync(chatId: chatId, text: FileTXTInteractions.ReadTXT("textFirstMessage"), cancellationToken: cancellationToken, replyMarkup: ButtonBank.RegisterButton, parseMode: ParseMode);
                 return;
             }
         }
