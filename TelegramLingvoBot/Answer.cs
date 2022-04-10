@@ -8,11 +8,11 @@
         /// <summary>
         /// Идентификатор ответа
         /// </summary>
-        public long Id { get; set; }
+        public long Id { get; private set; }
         /// <summary>
         /// Идентификатор пользователя
         /// </summary>
-        public long UserId { get; set; }
+        public long UserId { get; private set; }
         /// <summary>
         /// Вопрос, на который дан ответ
         /// </summary>
@@ -20,11 +20,14 @@
         /// <summary>
         /// Ответ пользователя
         /// </summary>
-        public string Text { get; set; }
+        public string Text { get; private set; }
         /// <summary>
         /// Комментарий от учителя или null если не проверено
         /// </summary>
         public string? Comment { get; set; }
+
+        public string? CheckedByModel { get; set; }
+
         /// <summary>
         /// Идетификатор учителя, проверившего работу или null если не проверено
         /// </summary>

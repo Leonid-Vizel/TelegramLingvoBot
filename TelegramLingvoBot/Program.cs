@@ -21,9 +21,12 @@ List<TelegramLingvoBot.Teacher> Teachers;
 using (var connection = dbInteract.GetConnection())
 {
     await connection.OpenAsync();
-    Users = await dbInteract.GetAllUsers();
-    Teachers = await dbInteract.GetAllTeachers();
+    Users = await dbInteract.GetAllUsers(connection);
+    Teachers = await dbInteract.GetAllTeachers(connection);
+    (await dbInteract.GetAnswersForGrammarCheck(connection)).ForEach(x => answerBagForModel.Add(x));
 }
+Thread thread = new Thread(new ThreadStart(WorkWithModel));
+thread.Start();
 System.Timers.Timer mainTimer;
 #endregion
 
@@ -75,13 +78,13 @@ using (var connection = dbInteract.GetConnection())
         await user.SetPosition(dbInteract, DialogPosition.MainMenu, connection);
     }
 
-    foreach (TelegramLingvoBot.Teacher teacher in Teachers.Where(x => (int)x.Position >= 12 && (int)x.Position <= 19))
+    foreach (TelegramLingvoBot.Teacher teacher in Teachers.Where(x => (int)x.Position >= 12 && (int)x.Position <= 17))
     {
         if (teacher.CurrentAnswer != null)
         {
             teacher.CurrentAnswer.TeacherId = teacher.Id;
             await teacher.SetPosition(dbInteract, DialogPosition.TeacherCheckAnswerEquivalence, connection);
-            await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Есть работа на проверку!\nПереводы: {teacher.CurrentAnswer.Question.Text}\nТекст: {teacher.CurrentAnswer.Text}", cancellationToken: cts.Token);
+            await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Есть работа на проверку!\n*Исходный*: {teacher.CurrentAnswer.Question.Text}\n*Перевод ученика*: {teacher.CurrentAnswer.Text}", cancellationToken: cts.Token, parseMode: ParseMode);
             await botClient.SendTextMessageAsync(chatId: teacher.Id, text: $"Оцените точность перевода: ", cancellationToken: cts.Token, replyMarkup: ButtonBank.RateForAnswerButtons);
         }
         else
@@ -777,19 +780,25 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
     {
         if (user != null)
         {
-            await user.SetPosition(dbInteract, DialogPosition.MainMenu);
-            await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию ☑️:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+            if (user.Position != DialogPosition.WaitingForResponce)
+            {
+                await user.SetPosition(dbInteract, DialogPosition.MainMenu);
+                await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию ☑️:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+            }
         }
         else
         {
-            await teacher.SetPosition(dbInteract, DialogPosition.TeacherMainMenu);
-            if (teacher.Balance < 100)
+            if ((int)teacher.Position < 12 || (int)teacher.Position > 17)
             {
-                await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию ☑️:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.TeacherMainMenuButtonsWithoutWithdrawalOfFunds);
-            }
-            else
-            {
-                await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию ☑️:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.TeacherMainMenuButtonsWithWithdrawalOfFunds);
+                await teacher.SetPosition(dbInteract, DialogPosition.TeacherMainMenu);
+                if (teacher.Balance < 100)
+                {
+                    await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию ☑️:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.TeacherMainMenuButtonsWithoutWithdrawalOfFunds);
+                }
+                else
+                {
+                    await botClient.SendTextMessageAsync(chatId: chatId, text: "Выберите опцию ☑️:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.TeacherMainMenuButtonsWithWithdrawalOfFunds);
+                }
             }
         }
         return;
@@ -1021,14 +1030,23 @@ async void ResetAllUsers(object? sender, ElapsedEventArgs e)
 
 void WorkWithModel()
 {
-    var startInfo = new ProcessStartInfo()
-    {
-        FileName = "cmd.exe",
-        Arguments = "python model.py",
-        WorkingDirectory = $"{Environment.CurrentDirectory}\\model",
-        UseShellExecute = true
-    };
-    Process.Start(startInfo);
+    //ProcessStartInfo startInfo = new ProcessStartInfo("python");
+    //Process process = new Process();
+
+    //string directory = $"{Environment.CurrentDirectory}\\model\\";
+    //string script = "script.py";
+
+    //startInfo.WorkingDirectory = directory;
+    //startInfo.Arguments = script;
+    //startInfo.UseShellExecute = false;
+    //startInfo.CreateNoWindow = true;
+    //startInfo.RedirectStandardError = true;
+    //startInfo.RedirectStandardOutput = true;
+
+    //process.StartInfo = startInfo;
+    //process.Start();
+
+    //Process.Start("cmd.exe", $"python {Environment.CurrentDirectory}\\model\\script.py");
     bool flag = true;
     while (flag)
     {
@@ -1036,10 +1054,19 @@ void WorkWithModel()
         {
             if (answerBagForModel.TryTake(out Answer answer))
             {
-                System.IO.File.WriteAllText($"{Environment.CurrentDirectory}\\model\\text.txt", answer.Text);
-                while (!System.IO.File.Exists("prediction.txt")) { }
-                // answer.CheckedText = System.IO.File.ReadAllText();
-                // dbInteraction.SaveCheckedText(answer);
+                Thread.Sleep(500);
+                System.IO.File.WriteAllText("model\\text.txt", answer.Text);
+                while (!System.IO.File.Exists("model\\prediction.txt")) { }
+                Thread.Sleep(500);
+                string read = System.IO.File.ReadAllText("model\\prediction.txt");
+                Console.WriteLine(read);
+                if (!read.Equals("He *is* driving a car."))
+                {
+                    answer.CheckedByModel = read;
+                    System.IO.File.Delete("model\\prediction.txt");
+                    dbInteract.SetCheckedByModel(answer).Wait();
+                    Console.WriteLine($"CHECKED! OUTPUT: {answer.CheckedByModel}");
+                }
             }
         }
     }
