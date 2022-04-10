@@ -46,7 +46,7 @@
 * [data/data.csv](data/data.csv) - clear and "to numeric" data
 * [templates](templates/) and [static](static/) includes html and css files for app
 * [Dockerfile](Dockerfile) describes a Docker image that is used to run the app
-* [Answer.cs](TelegramLingvoBot/Answer.cs) - Ответы пользователя.
+* [Answer.cs](TelegramLingvoBot/TelegramLingvoBot/Answer.cs) - Ответы пользователя.
 * [AwaitingAnswer.cs](TelegramLingvoBot/AwaitingAnswer.cs) - Ожидание пока пользователь переведёт текст 
 * [ButtonBank.cs](TelegramLingvoBot/ButtonBank.cs) - Шаблононы кнопок
 * [DatabaseInteractions.cs](TelegramLingvoBot/DatabaseInteractions.cs) - Взаимодействия с базой данных
