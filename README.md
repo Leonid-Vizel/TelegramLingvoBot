@@ -39,13 +39,6 @@
 4. Go to `http://localhost:8080/`
 
 ## Исходный код
-* [TelegramLingvoBot/model](TelegramLingvoBot/model/) contains my data and model research
-* [app.py](app.py) contains server logic
-* [model/model.py](model/model.py) class of model
-* [data/data.txt](data/data.txt) - initial data
-* [data/data.csv](data/data.csv) - clear and "to numeric" data
-* [templates](templates/) and [static](static/) includes html and css files for app
-* [Dockerfile](Dockerfile) describes a Docker image that is used to run the app
 * [Answer.cs](https://github.com/Leonid-Vizel/TelegramLingvoBot/blob/master/TelegramLingvoBot/Answer.cs) - Ответы пользователя.
 * [AwaitingAnswer.cs](https://github.com/Leonid-Vizel/TelegramLingvoBot/blob/master/TelegramLingvoBot/AwaitingAsnwer.cs) - Ожидание пока пользователь переведёт текст 
 * [ButtonBank.cs](https://github.com/Leonid-Vizel/TelegramLingvoBot/blob/master/TelegramLingvoBot/ButtonBank.cs) - Шаблононы кнопок
@@ -55,6 +48,7 @@
 * [Question.sc](https://github.com/Leonid-Vizel/TelegramLingvoBot/blob/master/TelegramLingvoBot/Question.cs) - Переводы и их параметры
 * [Theme.cs](https://github.com/Leonid-Vizel/TelegramLingvoBot/blob/master/TelegramLingvoBot/Theme.cs) - Темы переводов
 * [User.cs](https://github.com/Leonid-Vizel/TelegramLingvoBot/blob/master/TelegramLingvoBot/User.cs) - Файл с классами проверяющих и пользователей
+* [TelegramLingvoBot/model](TelegramLingvoBot/model/) - модель для проверки грамматики
 
 ## Example
 ### About demo
