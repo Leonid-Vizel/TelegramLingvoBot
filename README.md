@@ -46,15 +46,15 @@
 * [data/data.csv](data/data.csv) - clear and "to numeric" data
 * [templates](templates/) and [static](static/) includes html and css files for app
 * [Dockerfile](Dockerfile) describes a Docker image that is used to run the app
-* [TelegramLingvoBot/Answer.cs](Answer.cs) - Ответы пользователя.
-* [TelegramLingvoBot/AwaitingAnswer.cs](AwaitingAnswer.cs) - Ожидание пока пользователь переведёт текст 
-* [TelegramLingvoBot/ButtonBank.cs](ButtonBank.cs) - Шаблононы кнопок
-* [TelegramLingvoBot/DatabaseInteractions.cs](DatabaseInteractions.cs) - Взаимодействия с базой данных
-* [TelegramLingvoBot/FileTXTInteractions.cs](FileTXTInteractions.cs) - Взаимодействия с текстовыми файлами
-* [TelegramLingvoBot/Program.cs](Program.cs) - Запуск бота, модели и работа с сообщениями
-* [TelegramLingvoBot/Question.sc](Question.sc) - Переводы и их параметры
-* [TelegramLingvoBot/Theme.cs](Theme.cs) - Темы переводов
-* [TelegramLingvoBot/User.cs](User.cs) - Файл с классами проверяющих и пользователей
+* [Answer.cs](TelegramLingvoBot/Answer.cs) - Ответы пользователя.
+* [AwaitingAnswer.cs](TelegramLingvoBot/AwaitingAnswer.cs) - Ожидание пока пользователь переведёт текст 
+* [ButtonBank.cs](TelegramLingvoBot/ButtonBank.cs) - Шаблононы кнопок
+* [DatabaseInteractions.cs](TelegramLingvoBot/DatabaseInteractions.cs) - Взаимодействия с базой данных
+* [FileTXTInteractions.cs](TelegramLingvoBot/FileTXTInteractions.cs) - Взаимодействия с текстовыми файлами
+* [Program.cs](TelegramLingvoBot/Program.cs) - Запуск бота, модели и работа с сообщениями
+* [Question.sc](TelegramLingvoBot/Question.sc) - Переводы и их параметры
+* [Theme.cs](TelegramLingvoBot/Theme.cs) - Темы переводов
+* [User.cs](TelegramLingvoBot/User.cs) - Файл с классами проверяющих и пользователей
 
 ## Example
 ### About demo
