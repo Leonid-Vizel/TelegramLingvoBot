@@ -219,7 +219,7 @@ async Task ProcessingUserMainMenuProfile(TelegramLingvoBot.User? user, ITelegram
     await botClient.SendTextMessageAsync(chatId: user.Id, text: builder.ToString(), cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserProfileMenuButtons, parseMode: ParseMode);
 }
 
-async Task ProcessGoBackToMainMenu(TelegramLingvoBot.User? user, ITelegramBotClient botClient, CancellationToken cancellationToken)
+async Task ProcessUserGoBackToMainMenu(TelegramLingvoBot.User? user, ITelegramBotClient botClient, CancellationToken cancellationToken)
 {
     await botClient.SendTextMessageAsync(chatId: user.Id, text: "Выберите опцию ☑️:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
     await user.SetPosition(dbInteract, DialogPosition.MainMenu);
@@ -697,6 +697,11 @@ async Task ProcessingTeacherCheckAnswerStyle(TelegramLingvoBot.Teacher? teacher,
         return;
     }
 }
+async Task ProcessTeacherGoBackToMainMenu(TelegramLingvoBot.Teacher? teacher, ITelegramBotClient botClient, CancellationToken cancellationToken)
+{
+    await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Выберите опцию ☑️:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
+    await teacher.SetPosition(dbInteract, DialogPosition.TeacherMainMenu);
+}
 
 async Task ProcessSendReportSelectWork(TelegramLingvoBot.User? user, ITelegramBotClient botClient, CancellationToken cancellationToken)
 {
@@ -720,7 +725,7 @@ async Task ProcessSendReport(TelegramLingvoBot.User? user, ITelegramBotClient bo
             {
                 await dbInteract.AddReport(user.Id, answer.Id, connection);
                 await botClient.SendTextMessageAsync(chatId: user.Id, text: $"Ваша жалоба на проверку работы *#{answer.Id}* была успешно отправлена!\nОбратите внимание, если Вы будете отправлять сшком много жалоб, то эта функция станет недоступна!", cancellationToken: cancellationToken, replyMarkup: ButtonBank.EmptyButtons, parseMode: ParseMode);
-                await ProcessGoBackToMainMenu(user, botClient, cancellationToken);
+                await ProcessUserGoBackToMainMenu(user, botClient, cancellationToken);
             }
         }
     }
@@ -738,7 +743,7 @@ async Task ProcessingSendUserHelp(TelegramLingvoBot.User? user, ITelegramBotClie
 async Task ProcessingSendTeacherHelp(TelegramLingvoBot.Teacher? teacher, ITelegramBotClient botClient, CancellationToken cancellationToken)
 {
     await botClient.SendTextMessageAsync(chatId: teacher.Id, text: FileTXTInteractions.ReadTXT("helpForTeacher"), cancellationToken: cancellationToken, replyMarkup: ButtonBank.JustBackButton, parseMode: ParseMode);
-    teacher.SetPosition(dbInteract, DialogPosition.MainMenu);
+    teacher.SetPosition(dbInteract, DialogPosition.TeacherMainMenu);
 }
 
 async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
@@ -833,7 +838,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             switch (update.Message.Text)
             {
                 case "Назад":
-                    await ProcessGoBackToMainMenu(user, botClient, cancellationToken);
+                    await ProcessUserGoBackToMainMenu(user, botClient, cancellationToken);
                     break;
                 case "Магазин":
                     await ProcessingUserMainMenuShop(user, botClient, cancellationToken);
@@ -859,7 +864,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             switch (update.Message.Text)
             {
                 case "Назад":
-                    await ProcessGoBackToMainMenu(user, botClient, cancellationToken);
+                    await ProcessUserGoBackToMainMenu(user, botClient, cancellationToken);
                     break;
                 case "Отправить жалобу":
                     await ProcessSendReportSelectWork(user, botClient, cancellationToken);
@@ -876,7 +881,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
                     await ProcessAllUserWorks(user, botClient, cancellationToken);
                     break;
                 case "Назад в главное меню":
-                    await ProcessGoBackToMainMenu(user, botClient, cancellationToken);
+                    await ProcessUserGoBackToMainMenu(user, botClient, cancellationToken);
                     break;
                 default:
                     await botClient.SendTextMessageAsync(chatId: chatId, text: "Извините, я Вас не понял 🤖🤖🤖\nВыберите опцию ☑️:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserMainMenuButtons);
@@ -894,6 +899,9 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             }
             switch (update.Message.Text)
             {
+                case "Назад":
+                    await ProcessTeacherGoBackToMainMenu(teacher, botClient, cancellationToken);
+                    break;
                 case "Профиль":
                     await ProcessingTeacherMainMenuProfile(teacher, botClient, cancellationToken, teacherMainMenuButtons);
                     break;
@@ -935,7 +943,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             switch (update.Message.Text)
             {
                 case "Назад":
-                    await ProcessGoBackToMainMenu(user, botClient, cancellationToken);
+                    await ProcessUserGoBackToMainMenu(user, botClient, cancellationToken);
                     break;
                 default:
                     await ProcessingUserAnswerTypeSelectTranslateText(user, botClient, update, cancellationToken);
@@ -952,7 +960,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
                     await ProcessingUserThemesMenu(user, botClient, cancellationToken);
                     break;
                 case "Назад":
-                    await ProcessGoBackToMainMenu(user, botClient, cancellationToken);
+                    await ProcessUserGoBackToMainMenu(user, botClient, cancellationToken);
                     break;
                 default:
                     await botClient.SendTextMessageAsync(chatId: chatId, text: "Извините, я Вас не понял 🤖🤖🤖\nВыберите тип перевода:", cancellationToken: cancellationToken, replyMarkup: ButtonBank.UserProfileMenuButtons);
