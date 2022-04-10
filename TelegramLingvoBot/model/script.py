@@ -15,3 +15,5 @@ while(True):
             save_prediction(pred)
             f.close()
             os.remove('text.txt')
+    if os.path.exists('end.txt'):
+        break

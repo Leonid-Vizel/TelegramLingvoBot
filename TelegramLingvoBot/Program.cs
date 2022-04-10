@@ -12,6 +12,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 
 #region BaseLoading
+bool AdditionalFlag = true;
 ConcurrentBag<Answer> answerBagForModel = new ConcurrentBag<Answer>();
 ParseMode ParseMode = Telegram.Bot.Types.Enums.ParseMode.Markdown;
 DataBaseInteractions dbInteract = new DataBaseInteractions("Server=wpl36.hosting.reg.ru;Database=u1615366_LingvoHack;User Id=u1615366_LingvoHack;Password=y21e&B4a;charset=utf8;");
@@ -24,6 +25,10 @@ using (var connection = dbInteract.GetConnection())
     Users = await dbInteract.GetAllUsers(connection);
     Teachers = await dbInteract.GetAllTeachers(connection);
     (await dbInteract.GetAnswersForGrammarCheck(connection)).ForEach(x => answerBagForModel.Add(x));
+}
+if (System.IO.File.Exists($"{Environment.CurrentDirectory}\\model\\end.txt"))
+{
+    System.IO.File.Delete($"{Environment.CurrentDirectory}\\model\\end.txt");
 }
 Thread thread = new Thread(new ThreadStart(WorkWithModel));
 thread.Start();
@@ -117,6 +122,8 @@ Console.ReadLine();
 
 // Send cancellation request to stop bot
 cts.Cancel();
+System.IO.File.Create($"{Environment.CurrentDirectory}\\model\\end.txt").Close();
+AdditionalFlag = false;
 #endregion
 
 async Task ProcessingUserMainMenuShop(TelegramLingvoBot.User? user, ITelegramBotClient botClient, CancellationToken cancellationToken)
@@ -344,6 +351,7 @@ async Task ProcessingTeacherWorkCheckComment(TelegramLingvoBot.Teacher? teacher,
         await botClient.SendTextMessageAsync(chatId: teacher.CurrentAnswer.UserId, text: $"Ваша работа (ID:{teacher.CurrentAnswer.Id}) проверена!\nВы моежете посмотреть свои результаты в разделе 'Работы'.", cancellationToken: cancellationToken);
         await dbInteract.UpdateTeacherAnswerId(teacher.Id, null, connection);
         await teacher.SetPosition(dbInteract, DialogPosition.TeacherMainMenu, connection);
+        answerBagForModel.Add(teacher.CurrentAnswer);
         teacher.CurrentAnswer = null;
         await botClient.SendTextMessageAsync(chatId: teacher.Id, text: "Отлично! Ваша проверка отправлена! На Ваш баланс добавлено: 40 рублей", cancellationToken: cancellationToken, replyMarkup: teacherMainMenuButtons);
     }
@@ -1030,25 +1038,23 @@ async void ResetAllUsers(object? sender, ElapsedEventArgs e)
 
 void WorkWithModel()
 {
-    //ProcessStartInfo startInfo = new ProcessStartInfo("python");
-    //Process process = new Process();
+    ProcessStartInfo startInfo = new ProcessStartInfo("python");
+    Process process = new Process();
 
-    //string directory = $"{Environment.CurrentDirectory}\\model\\";
-    //string script = "script.py";
+    string directory = $"{Environment.CurrentDirectory}\\model\\";
+    string script = "script.py";
 
-    //startInfo.WorkingDirectory = directory;
-    //startInfo.Arguments = script;
-    //startInfo.UseShellExecute = false;
-    //startInfo.CreateNoWindow = true;
-    //startInfo.RedirectStandardError = true;
-    //startInfo.RedirectStandardOutput = true;
+    startInfo.WorkingDirectory = directory;
+    startInfo.Arguments = script;
+    startInfo.UseShellExecute = false;
+    startInfo.CreateNoWindow = true;
+    startInfo.RedirectStandardError = true;
+    startInfo.RedirectStandardOutput = true;
 
-    //process.StartInfo = startInfo;
-    //process.Start();
+    process.StartInfo = startInfo;
+    process.Start();
 
-    //Process.Start("cmd.exe", $"python {Environment.CurrentDirectory}\\model\\script.py");
-    bool flag = true;
-    while (flag)
+    while (AdditionalFlag)
     {
         if (answerBagForModel.Count > 0)
         {
@@ -1059,7 +1065,6 @@ void WorkWithModel()
                 while (!System.IO.File.Exists("model\\prediction.txt")) { }
                 Thread.Sleep(500);
                 string read = System.IO.File.ReadAllText("model\\prediction.txt");
-                Console.WriteLine(read);
                 if (!read.Equals("He *is* driving a car."))
                 {
                     answer.CheckedByModel = read;
