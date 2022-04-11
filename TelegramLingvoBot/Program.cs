@@ -15,7 +15,7 @@ using System.Diagnostics;
 bool AdditionalFlag = true;
 ConcurrentBag<Answer> answerBagForModel = new ConcurrentBag<Answer>();
 ParseMode ParseMode = Telegram.Bot.Types.Enums.ParseMode.Markdown;
-DataBaseInteractions dbInteract = new DataBaseInteractions("Server=wpl36.hosting.reg.ru;Database=u1615366_LingvoHack;User Id=u1615366_LingvoHack;Password=y21e&B4a;charset=utf8;");
+DataBaseInteractions dbInteract = new DataBaseInteractions("Server=***;Database=***;User Id=***;Password=***;charset=utf8;");
 List<AwaitingAsnwer> awaitingAsnwers = new List<AwaitingAsnwer>();
 List<TelegramLingvoBot.User> Users;
 List<TelegramLingvoBot.Teacher> Teachers;
